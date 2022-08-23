@@ -76,7 +76,8 @@ uint8_t RdByte(
 	uint8_t data_read[1];
 	
 	/* Need to be implemented by customer. This function returns 0 if OK */
-	data_write[0] = (RegisterAdress >> 8) & 0xFF;
+	//data_write[0] = (RegisterAdress >> 8) & 0xFF;
+    data_write[0] = (RegisterAdress >> 8);
 	data_write[1] = RegisterAdress & 0xFF;
 
 	//status = HAL_I2C_Master_Transmit(&hi2c1, p_platform->address, data_write, 2, T_OUT);

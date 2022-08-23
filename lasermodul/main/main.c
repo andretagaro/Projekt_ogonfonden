@@ -23,9 +23,6 @@ void app_main(void)
     i2c_init_master(SDA_GPIO, SCL_GPIO, I2C_FREQ, 0);
     int test;
     i2c_get_timeout(0, &test);
-
-    printf("%d, test..", test);
-
     init_gpio();
 
     VL53L5CX_Configuration *dev1 = malloc(sizeof *dev1);
@@ -96,12 +93,12 @@ void i2c_init_master(const uint8_t SDA_LINE, const uint8_t SCL_LINE, const uint3
         .sda_pullup_en = GPIO_PULLUP_ENABLE,
         .scl_io_num = SCL_GPIO,
         .scl_pullup_en = GPIO_PULLUP_ENABLE,
-        .master.clk_speed = I2C_FREQ,
+        .master.clk_speed = I2C_FREQ
     };
 
     ESP_ERROR_CHECK(i2c_param_config(0, &config));
-    ESP_ERROR_CHECK(i2c_set_timeout(0, I2C_TIMEOUT));
     ESP_ERROR_CHECK(i2c_driver_install(0, I2C_MODE_MASTER, 0, 0, 0));
+    //ESP_ERROR_CHECK(i2c_set_timeout(0, I2C_TIMEOUT));
 
     ESP_LOGI("I2C_INIT_MASTER", "i2c configuration ran");
 }

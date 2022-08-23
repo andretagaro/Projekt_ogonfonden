@@ -300,14 +300,11 @@ uint8_t vl53l5cx_init(
 
 	/* SW reboot sequence */
 	status |= WrByte(&(p_dev->platform), 0x7fff, 0x00);
-	ESP_LOGI("TEST", "status after first write is, %d", status);
 	status |= WrByte(&(p_dev->platform), 0x0009, 0x04);
 	status |= WrByte(&(p_dev->platform), 0x000F, 0x40);
 	status |= WrByte(&(p_dev->platform), 0x000A, 0x03);
 	status |= RdByte(&(p_dev->platform), 0x7FFF, &tmp);
 	status |= WrByte(&(p_dev->platform), 0x000C, 0x01);
-
-	
 
 	status |= WrByte(&(p_dev->platform), 0x0101, 0x00);
 	status |= WrByte(&(p_dev->platform), 0x0102, 0x00);
