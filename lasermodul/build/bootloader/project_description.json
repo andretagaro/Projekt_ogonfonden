@@ -6,7 +6,7 @@
     "config_defaults":    "",
     "app_elf":            "bootloader.elf",
     "app_bin":            "bootloader.bin",
-    "git_revision":       "-128-NOTFOUND",
+    "git_revision":       "v4.3.3",
     "target":             "esp32c3",
     "phy_data_partition": "",
     "monitor_baud" :      "115200",

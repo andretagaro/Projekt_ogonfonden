@@ -14128,16 +14128,6 @@
                                         "range": null,
                                         "title": "Add custom certificates to the default bundle",
                                         "type": "bool"
-                                    },
-                                    {
-                                        "children": [],
-                                        "depends_on": "MBEDTLS_CERTIFICATE_BUNDLE",
-                                        "help": null,
-                                        "id": "MBEDTLS_CERTIFICATE_BUNDLE_MAX_CERTS",
-                                        "name": "MBEDTLS_CERTIFICATE_BUNDLE_MAX_CERTS",
-                                        "range": null,
-                                        "title": "Maximum no of certificates allowed in certificate bundle",
-                                        "type": "int"
                                     }
                                 ],
                                 "depends_on": null,

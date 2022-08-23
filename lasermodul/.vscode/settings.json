@@ -12,5 +12,11 @@
     "idf.pythonBinPathWin": "c:\\esp\\tools\\python_env\\idf4.3_py3.8_env\\Scripts\\python.exe",
     "idf.toolsPathWin": "c:\\esp\\tools",
     "cmake.configureOnOpen": true,
-    "idf.flashType": "UART"
+    "idf.flashType": "UART",
+    "files.associations": {
+        "platform.h": "c",
+        "i2c.h": "c",
+        "sdkconfig.h": "c",
+        "task.h": "c"
+    }
 }
