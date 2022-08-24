@@ -72,20 +72,25 @@ uint8_t RdByte(
 {
     printf("RdBBtick\n");
 	uint8_t status = 0;
-	uint8_t data_write[2];
+	uint8_t register_address_arr[2];
 	uint8_t data_read[1];
 	
 	/* Need to be implemented by customer. This function returns 0 if OK */
 	//data_write[0] = (RegisterAdress >> 8) & 0xFF;
-    data_write[0] = (RegisterAdress >> 8);
-	data_write[1] = RegisterAdress & 0xFF;
+    register_address_arr[0] = (RegisterAdress >> 8);
+	register_address_arr[1] = RegisterAdress & 0xFF;
 
-	//status = HAL_I2C_Master_Transmit(&hi2c1, p_platform->address, data_write, 2, T_OUT);
-	//status = HAL_I2C_Master_Receive(&hi2c1, p_platform->address, data_read, 1, T_OUT);
     i2c_cmd_handle_t i2c_handle = i2c_cmd_link_create();
     status |= i2c_master_start(i2c_handle);
-    status |= i2c_master_write_byte(i2c_handle, p_platform->address | I2C_MASTER_READ, true);
-    status |= i2c_master_write(i2c_handle, data_write, 2, true);
+    status |= i2c_master_write_byte(i2c_handle, p_platform->address | I2C_MASTER_WRITE, true);
+    status |= i2c_master_write(i2c_handle, register_address_arr, 2, true);
+	status |= i2c_master_stop(i2c_handle);
+	status |= i2c_master_cmd_begin(p_platform->port, i2c_handle, 1000 / portTICK_PERIOD_MS);
+	i2c_cmd_link_delete(i2c_handle);
+
+	i2c_handle = i2c_cmd_link_create();
+    status |= i2c_master_start(i2c_handle);
+	status |= i2c_master_write_byte(i2c_handle, p_platform->address | I2C_MASTER_READ, true);
     status |= i2c_master_read_byte(i2c_handle, (uint8_t *) &data_read, I2C_MASTER_NACK);
     status |= i2c_master_stop(i2c_handle);
     status |= i2c_master_cmd_begin(p_platform->port, i2c_handle, 1000 / portTICK_PERIOD_MS);
@@ -96,26 +101,62 @@ uint8_t RdByte(
 	return status;
 }
 
+uint8_t RdMulti(
+		VL53L5CX_Platform *p_platform,
+		uint16_t RegisterAdress,
+		uint8_t *p_values,
+		uint32_t size)
+{
+	printf("Rd_Multi_tick\n");
+	uint8_t status = 0;
+	uint8_t register_address_arr[2];
+	uint8_t data_read[1];
+  
+	/* Need to be implemented by customer. This function returns 0 if OK */
+	//data_write[0] = (RegisterAdress >> 8) & 0xFF;
+    register_address_arr[0] = (RegisterAdress >> 8);
+	register_address_arr[1] = RegisterAdress & 0xFF;
+
+    i2c_cmd_handle_t i2c_handle = i2c_cmd_link_create();
+    status |= i2c_master_start(i2c_handle);
+    status |= i2c_master_write_byte(i2c_handle, p_platform->address | I2C_MASTER_WRITE, true);
+    status |= i2c_master_write(i2c_handle, register_address_arr, 2, true);
+	status |= i2c_master_stop(i2c_handle);
+	status |= i2c_master_cmd_begin(p_platform->port, i2c_handle, 1000 / portTICK_PERIOD_MS);
+	i2c_cmd_link_delete(i2c_handle);
+	
+	i2c_handle = i2c_cmd_link_create();
+    status |= i2c_master_start(i2c_handle);
+	status |= i2c_master_write_byte(i2c_handle, p_platform->address | I2C_MASTER_READ, true);
+    status |= i2c_master_read(i2c_handle, p_values, size,  I2C_MASTER_LAST_NACK);
+    status |= i2c_master_stop(i2c_handle);
+    status |= i2c_master_cmd_begin(p_platform->port, i2c_handle, 1000 / portTICK_PERIOD_MS);
+    i2c_cmd_link_delete(i2c_handle);
+
+	return status;
+}
+
+
 uint8_t WrByte(
 		VL53L5CX_Platform *p_platform,
 		uint16_t RegisterAdress,
 		uint8_t value)
 {
-	uint8_t data_write[3];
+	uint8_t register_address_arr_and_value[3];
 	uint8_t status = 0;
 
     printf("wrBtick\n");
 
 	/* Need to be implemented by customer. This function returns 0 if OK */
-    data_write[0] = (RegisterAdress >> 8) & 0xFF; //Address at device
-	data_write[1] = RegisterAdress & 0xFF; //Address at device
-	data_write[2] = value & 0xFF; //Data to send
+    register_address_arr_and_value[0] = (RegisterAdress >> 8) & 0xFF; //Address at device
+	register_address_arr_and_value[1] = RegisterAdress & 0xFF; //Address at device
+	register_address_arr_and_value[2] = value & 0xFF; //Data to send
 
 	//status = HAL_I2C_Master_Transmit(&hi2c1,p_platform->address, data_write, 3, T_OUT);
     i2c_cmd_handle_t i2c_handle = i2c_cmd_link_create();
     ESP_ERROR_CHECK(i2c_master_start(i2c_handle));
     ESP_ERROR_CHECK(i2c_master_write_byte(i2c_handle, p_platform->address | I2C_MASTER_WRITE, true));
-    ESP_ERROR_CHECK(i2c_master_write(i2c_handle, data_write, 3, true));
+    ESP_ERROR_CHECK(i2c_master_write(i2c_handle, register_address_arr_and_value, 3, true));
     ESP_ERROR_CHECK(i2c_master_stop(i2c_handle));
     ESP_ERROR_CHECK(i2c_master_cmd_begin(p_platform->port, i2c_handle, 1000 / portTICK_PERIOD_MS));
     i2c_cmd_link_delete(i2c_handle);
@@ -129,21 +170,19 @@ uint8_t WrMulti(
 		uint8_t *p_values,
 		uint32_t size)
 {
+	printf("Wr_Multi_tick\n");
+
     uint8_t status = 0;
+	uint8_t register_address_arr[2];
 
-    uint8_t send_buffer[65535];
-
-    send_buffer[0] = (uint8_t) (p_platform->address | I2C_MASTER_WRITE); //Address of device
-    send_buffer[1] = (RegisterAdress >> 8) & 0xFF; //Address at device
-	send_buffer[2] = RegisterAdress & 0xFF; //Address at device
-    memcpy(&send_buffer[3], p_values, size);
-		/* Need to be implemented by customer. This function returns 0 if OK */
-	//uint8_t status = HAL_I2C_Mem_Write(&hi2c1, p_platform->address, RegisterAdress,
-	//								I2C_MEMADD_SIZE_16BIT, p_values, size, 65535);
+    register_address_arr[0] = (RegisterAdress >> 8) & 0xFF; //Address at device
+	register_address_arr[1] = RegisterAdress & 0xFF; //Address at device
 
     i2c_cmd_handle_t i2c_handle = i2c_cmd_link_create();
     status |= i2c_master_start(i2c_handle);
-    status |= i2c_master_write(i2c_handle, send_buffer, size + 3, true);
+	ESP_ERROR_CHECK(i2c_master_write_byte(i2c_handle, p_platform->address | I2C_MASTER_WRITE, true));
+    ESP_ERROR_CHECK(i2c_master_write(i2c_handle, register_address_arr, 2, true));
+	ESP_ERROR_CHECK(i2c_master_write(i2c_handle, p_values, size, true));
     status |= i2c_master_stop(i2c_handle);
     status |= i2c_master_cmd_begin(p_platform->port, i2c_handle, 1000 / portTICK_PERIOD_MS);
     i2c_cmd_link_delete(i2c_handle);
@@ -151,31 +190,6 @@ uint8_t WrMulti(
 	return status;
 }
 
-uint8_t RdMulti(
-		VL53L5CX_Platform *p_platform,
-		uint16_t RegisterAdress,
-		uint8_t *p_values,
-		uint32_t size)
-{
-    uint8_t status = 0;
-    uint8_t data_write[3];
-	/* Need to be implemented by customer. This function returns 0 if OK */
-    data_write[0] = (uint8_t) (p_platform->address | I2C_MASTER_READ);
-	data_write[1] = (RegisterAdress >> 8) & 0xFF;
-	data_write[2] = RegisterAdress & 0xFF;
-	//status = HAL_I2C_Master_Transmit(&hi2c1, p_platform->address, data_write, 2, T_OUT);
-	//status += HAL_I2C_Master_Receive(&hi2c1, p_platform->address, p_values, size, T_OUT);
-    i2c_cmd_handle_t i2c_handle = i2c_cmd_link_create();
-    status |= i2c_master_start(i2c_handle);
-    status |= i2c_master_write(i2c_handle, data_write, 4, true);
-    status |= i2c_master_read(i2c_handle, p_values, size - 1,  I2C_MASTER_ACK);
-    status |= i2c_master_read_byte(i2c_handle, p_values + size - 1, I2C_MASTER_NACK);
-    status |= i2c_master_stop(i2c_handle);
-    status |= i2c_master_cmd_begin(p_platform->port, i2c_handle, 1000 / portTICK_PERIOD_MS);
-    i2c_cmd_link_delete(i2c_handle);
-
-	return status;
-}
 
 uint8_t Reset_Sensor(
 		VL53L5CX_Platform *p_platform)
@@ -218,11 +232,7 @@ uint8_t WaitMs(
 		VL53L5CX_Platform *p_platform,
 		uint32_t TimeMs)
 {
-	uint8_t status = 255;
-
 	/* Need to be implemented by customer. This function returns 0 if OK */
     vTaskDelay(1 / portTICK_PERIOD_MS);
-    status = 0;
-
 	return 0;
 }
