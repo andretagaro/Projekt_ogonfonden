@@ -1,2 +1,2 @@
-idf_component_register(SRCS "platform.c" "vl53l5cx_plugin_motion_indicator.c" "vl53l5cx_api.c" "main.c"
+idf_component_register(SRCS "esp_now_functions.c" "vl53l5cx_custom_functions.c" "platform.c" "vl53l5cx_plugin_motion_indicator.c" "vl53l5cx_api.c" "main.c"
                     INCLUDE_DIRS "." "include")

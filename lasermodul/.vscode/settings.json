@@ -17,6 +17,7 @@
         "platform.h": "c",
         "i2c.h": "c",
         "sdkconfig.h": "c",
-        "task.h": "c"
+        "task.h": "c",
+        "esp_log.h": "c"
     }
 }

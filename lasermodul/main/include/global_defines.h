@@ -1,14 +1,21 @@
 #ifndef GLOBAL_DEFINES_H_
 #define GLOBAL_DEFINES_H_
 
+/* LOGIC DEFINES */
 #define ON 1
 #define OFF 0
 #define FOREVER 1
+/* --------------- */
 
+
+/* I2C DEFINES */
 #define SDA_GPIO 2 
 #define SCL_GPIO 3
 #define I2C_FREQ 1000000
+/* --------------- */
 
+
+/*VL53L5CX DEFINES */
 #define LP_1_PIN 7
 #define INT_1_PIN 6
 #define RST_1_PIN 9
@@ -20,5 +27,11 @@
 #define PWR_ENABLE_2_PIN 10
 
 #define SENSOR_2_ADDRESS 0x22
+/* --------------- */
+
+/* ESP-NOW DEFINES */
+#define MAC_SIZE 6
+/* --------------- */
+
 
 #endif
