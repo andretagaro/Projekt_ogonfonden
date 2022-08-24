@@ -64,6 +64,7 @@
 #include "freertos/task.h"
 #include "driver/i2c.h"
 #include "global_defines.h"
+#include "esp_log.h"
 
 uint8_t RdByte(
 		VL53L5CX_Platform *p_platform,
@@ -188,15 +189,32 @@ uint8_t Reset_Sensor(
 		VL53L5CX_Platform *p_platform)
 {
 	uint8_t status = 0;
-		
-    status |= gpio_set_level(LP_1_PIN, OFF);
-    status |= gpio_set_level(PWR_ENABLE_1_PIN, OFF);
-	WaitMs(p_platform, 100);
 
-    status |= gpio_set_level(LP_1_PIN, ON);
-    gpio_set_level(PWR_ENABLE_1_PIN, ON);
-	WaitMs(p_platform, 100);
+	if(p_platform->id == 1)
+	{
+		ESP_LOGI("Reset_Sensor", "reseting sensor 1");
 
+		status |= gpio_set_level(LP_1_PIN, OFF);
+		status |= gpio_set_level(PWR_ENABLE_1_PIN, OFF);
+		WaitMs(p_platform, 100);
+
+		status |= gpio_set_level(LP_1_PIN, ON);
+		status |= gpio_set_level(PWR_ENABLE_1_PIN, ON);
+		WaitMs(p_platform, 100);
+	}
+	else if(p_platform->id == 2)
+	{
+		ESP_LOGI("Reset_Sensor", "reseting sensor 2");
+			
+		status |= gpio_set_level(LP_2_PIN, OFF);
+		status |= gpio_set_level(PWR_ENABLE_2_PIN, OFF);
+		WaitMs(p_platform, 100);
+
+		status |= gpio_set_level(LP_2_PIN, ON);
+		status |= gpio_set_level(PWR_ENABLE_2_PIN, ON);
+		WaitMs(p_platform, 100);
+
+	}
 	return status;
 }
 

@@ -81,6 +81,7 @@ typedef struct
 	/* Example for most standard platform : I2C address of sensor */
     uint16_t  			address;
 	uint8_t				port;
+	uint8_t				id;
 
 } VL53L5CX_Platform;
 
