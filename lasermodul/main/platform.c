@@ -70,13 +70,11 @@ uint8_t RdByte(
 		uint16_t RegisterAdress,
 		uint8_t *p_value)
 {
-    printf("RdBBtick\n");
+    //printf("RdBBtick\n");
 	uint8_t status = 0;
 	uint8_t register_address_arr[2];
 	uint8_t data_read[1];
 	
-	/* Need to be implemented by customer. This function returns 0 if OK */
-	//data_write[0] = (RegisterAdress >> 8) & 0xFF;
     register_address_arr[0] = (RegisterAdress >> 8);
 	register_address_arr[1] = RegisterAdress & 0xFF;
 
@@ -107,13 +105,10 @@ uint8_t RdMulti(
 		uint8_t *p_values,
 		uint32_t size)
 {
-	printf("Rd_Multi_tick\n");
+	//printf("Rd_Multi_tick\n");
 	uint8_t status = 0;
 	uint8_t register_address_arr[2];
-	uint8_t data_read[1];
   
-	/* Need to be implemented by customer. This function returns 0 if OK */
-	//data_write[0] = (RegisterAdress >> 8) & 0xFF;
     register_address_arr[0] = (RegisterAdress >> 8);
 	register_address_arr[1] = RegisterAdress & 0xFF;
 
@@ -145,20 +140,18 @@ uint8_t WrByte(
 	uint8_t register_address_arr_and_value[3];
 	uint8_t status = 0;
 
-    printf("wrBtick\n");
+    //printf("wrBtick\n");
 
-	/* Need to be implemented by customer. This function returns 0 if OK */
     register_address_arr_and_value[0] = (RegisterAdress >> 8) & 0xFF; //Address at device
 	register_address_arr_and_value[1] = RegisterAdress & 0xFF; //Address at device
 	register_address_arr_and_value[2] = value & 0xFF; //Data to send
 
-	//status = HAL_I2C_Master_Transmit(&hi2c1,p_platform->address, data_write, 3, T_OUT);
     i2c_cmd_handle_t i2c_handle = i2c_cmd_link_create();
-    ESP_ERROR_CHECK(i2c_master_start(i2c_handle));
-    ESP_ERROR_CHECK(i2c_master_write_byte(i2c_handle, p_platform->address | I2C_MASTER_WRITE, true));
-    ESP_ERROR_CHECK(i2c_master_write(i2c_handle, register_address_arr_and_value, 3, true));
-    ESP_ERROR_CHECK(i2c_master_stop(i2c_handle));
-    ESP_ERROR_CHECK(i2c_master_cmd_begin(p_platform->port, i2c_handle, 1000 / portTICK_PERIOD_MS));
+    status |= i2c_master_start(i2c_handle);
+    status |= i2c_master_write_byte(i2c_handle, p_platform->address | I2C_MASTER_WRITE, true);
+    status |= i2c_master_write(i2c_handle, register_address_arr_and_value, 3, true);
+    status |= i2c_master_stop(i2c_handle);
+    status |= i2c_master_cmd_begin(p_platform->port, i2c_handle, 1000 / portTICK_PERIOD_MS);
     i2c_cmd_link_delete(i2c_handle);
 
 	return status;
@@ -170,7 +163,7 @@ uint8_t WrMulti(
 		uint8_t *p_values,
 		uint32_t size)
 {
-	printf("Wr_Multi_tick\n");
+	//printf("Wr_Multi_tick\n");
 
     uint8_t status = 0;
 	uint8_t register_address_arr[2];
@@ -180,9 +173,9 @@ uint8_t WrMulti(
 
     i2c_cmd_handle_t i2c_handle = i2c_cmd_link_create();
     status |= i2c_master_start(i2c_handle);
-	ESP_ERROR_CHECK(i2c_master_write_byte(i2c_handle, p_platform->address | I2C_MASTER_WRITE, true));
-    ESP_ERROR_CHECK(i2c_master_write(i2c_handle, register_address_arr, 2, true));
-	ESP_ERROR_CHECK(i2c_master_write(i2c_handle, p_values, size, true));
+	status |= i2c_master_write_byte(i2c_handle, p_platform->address | I2C_MASTER_WRITE, true);
+    status |= i2c_master_write(i2c_handle, register_address_arr, 2, true);
+	status |= i2c_master_write(i2c_handle, p_values, size, true);
     status |= i2c_master_stop(i2c_handle);
     status |= i2c_master_cmd_begin(p_platform->port, i2c_handle, 1000 / portTICK_PERIOD_MS);
     i2c_cmd_link_delete(i2c_handle);
@@ -195,14 +188,12 @@ uint8_t Reset_Sensor(
 		VL53L5CX_Platform *p_platform)
 {
 	uint8_t status = 0;
-	
-	/* (Optional) Need to be implemented by customer. This function returns 0 if OK */
-	
-    gpio_set_level(LP_1_PIN, OFF);
-    gpio_set_level(PWR_ENABLE_1_PIN, OFF);
+		
+    status |= gpio_set_level(LP_1_PIN, OFF);
+    status |= gpio_set_level(PWR_ENABLE_1_PIN, OFF);
 	WaitMs(p_platform, 100);
 
-    gpio_set_level(LP_1_PIN, ON);
+    status |= gpio_set_level(LP_1_PIN, ON);
     gpio_set_level(PWR_ENABLE_1_PIN, ON);
 	WaitMs(p_platform, 100);
 
@@ -232,7 +223,6 @@ uint8_t WaitMs(
 		VL53L5CX_Platform *p_platform,
 		uint32_t TimeMs)
 {
-	/* Need to be implemented by customer. This function returns 0 if OK */
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(TimeMs / portTICK_PERIOD_MS);
 	return 0;
 }
