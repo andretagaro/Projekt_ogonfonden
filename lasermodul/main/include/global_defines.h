@@ -29,9 +29,4 @@
 #define SENSOR_2_ADDRESS 0x22
 /* --------------- */
 
-/* ESP-NOW DEFINES */
-#define MAC_SIZE 6
-/* --------------- */
-
-
 #endif

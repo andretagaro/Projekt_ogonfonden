@@ -18,6 +18,7 @@
         "i2c.h": "c",
         "sdkconfig.h": "c",
         "task.h": "c",
-        "esp_log.h": "c"
+        "esp_log.h": "c",
+        "esp_now.h": "c"
     }
 }

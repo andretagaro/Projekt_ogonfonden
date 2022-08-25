@@ -16,8 +16,8 @@
 void init_gpio(void);
 void i2c_init_master(const uint8_t SDA_LINE, const uint8_t SCL_LINE, const uint32_t FREQ, const uint8_t PORT);
 
-uint8_t mac_adress_sender[MAC_SIZE] = {0x84,0xf7,0x03,0x0b,0xd1,0x2c};
-uint8_t mac_adress_left[MAC_SIZE]; // not defined yet
+uint8_t mac_adress_sender[MAC_SIZE] = {0x84,0xf7,0x03,0x0b,0xd1,0x2c}; // this is my mac.
+uint8_t mac_adress_left[MAC_SIZE] = {0x84, 0xf7, 0x03, 0x0b, 0xdd, 0x5c};
 uint8_t mac_adress_right[MAC_SIZE]; // not defined yet
 
 void app_main(void)
@@ -54,6 +54,10 @@ void app_main(void)
     init_sensor(sensor_2);
     init_sensor(sensor_1);
 
+    activate_esp_now();
+    esp_now_add_peer_wrapper(mac_adress_left);
+    char esp_now_send_buffer[MAX_ESP_NOW_SIZE];
+
     /* ---------------------------------- */
 
     uint16_t grouped_results[10] = {0};
@@ -63,6 +67,11 @@ void app_main(void)
        get_single_measurement_blocking(sensor_1, results_1);
        get_single_measurement_blocking(sensor_2, results_2);
        group_result_to_segments(results_1, results_2, grouped_results);
+
+       sprintf(esp_now_send_buffer, "%d%d%d%d%d%d%d%d%d%d", grouped_results[0], grouped_results[1], 
+       grouped_results[2], grouped_results[3], grouped_results[4], grouped_results[5], 
+       grouped_results[6], grouped_results[7], grouped_results[8], grouped_results[9]);
+       esp_now_send(mac_adress_left, (uint8_t*) esp_now_send_buffer, strlen(esp_now_send_buffer));
 	   
        /* debug section */
        // print_segments(grouped_results);
