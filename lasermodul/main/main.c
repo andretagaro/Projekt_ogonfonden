@@ -32,7 +32,8 @@ void app_main(void)
     i2c_init_master(SDA_GPIO, SCL_GPIO, I2C_FREQ, 0);
     init_gpio();
 
-    /*Sensor setup block, place in function? */
+    /* Sensor setup block */
+    uint16_t grouped_results[10] = {0};
 
     VL53L5CX_Configuration *sensor_1 = malloc(sizeof(VL53L5CX_Configuration));
     sensor_1->platform.address = VL53L5CX_DEFAULT_I2C_ADDRESS;
@@ -53,33 +54,24 @@ void app_main(void)
 
     init_sensor(sensor_2);
     init_sensor(sensor_1);
+    /* ---------------------------------- */
 
     activate_esp_now();
     esp_now_add_peer_wrapper(mac_adress_left);
     char esp_now_send_buffer[MAX_ESP_NOW_SIZE];
-
-    /* ---------------------------------- */
-
-    uint16_t grouped_results[10] = {0};
 
     for(;;)
     {
        get_single_measurement_blocking(sensor_1, results_1);
        get_single_measurement_blocking(sensor_2, results_2);
        group_result_to_segments(results_1, results_2, grouped_results);
+       esp_now_send_wrapper(grouped_results, esp_now_send_buffer, mac_adress_left);	
+       vTaskDelay(portTICK_PERIOD_MS); // This gives the system time to reset the WDT. 
 
-       sprintf(esp_now_send_buffer, "%d%d%d%d%d%d%d%d%d%d", grouped_results[0], grouped_results[1], 
-       grouped_results[2], grouped_results[3], grouped_results[4], grouped_results[5], 
-       grouped_results[6], grouped_results[7], grouped_results[8], grouped_results[9]);
-       esp_now_send(mac_adress_left, (uint8_t*) esp_now_send_buffer, strlen(esp_now_send_buffer));
-	   
        /* debug section */
        // print_segments(grouped_results);
        // print_sensor_data(results_1, results_2);
        /* ------------- */
-
-        /* Send data via ESP NOW*/  
-       vTaskDelay(portTICK_PERIOD_MS); // This gives the system time to reset to WDT.
     }
 }
 
