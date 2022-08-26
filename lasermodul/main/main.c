@@ -18,7 +18,7 @@ void i2c_init_master(const uint8_t SDA_LINE, const uint8_t SCL_LINE, const uint3
 
 uint8_t mac_adress_sender[MAC_SIZE] = {0x84,0xf7,0x03,0x0b,0xd1,0x2c}; // this is my mac.
 uint8_t mac_adress_left[MAC_SIZE] = {0x84, 0xf7, 0x03, 0x0b, 0xdd, 0x5c};
-uint8_t mac_adress_right[MAC_SIZE]; // not defined yet
+uint8_t mac_adress_right[MAC_SIZE] = {0xfc, 0xf5, 0xc4, 0x09, 0x61, 0x90};
 
 void app_main(void)
 {   
@@ -58,6 +58,7 @@ void app_main(void)
 
     activate_esp_now();
     esp_now_add_peer_wrapper(mac_adress_left);
+    esp_now_add_peer_wrapper(mac_adress_right);
     char esp_now_send_buffer[MAX_ESP_NOW_SIZE];
 
     for(;;)
@@ -65,7 +66,7 @@ void app_main(void)
        get_single_measurement_blocking(sensor_1, results_1);
        get_single_measurement_blocking(sensor_2, results_2);
        group_result_to_segments(results_1, results_2, grouped_results);
-       esp_now_send_wrapper(grouped_results, esp_now_send_buffer, mac_adress_left);	
+       esp_now_send_wrapper(grouped_results, esp_now_send_buffer, mac_adress_left, mac_adress_right);	
        vTaskDelay(portTICK_PERIOD_MS); // This gives the system time to reset the WDT. 
 
        /* debug section */

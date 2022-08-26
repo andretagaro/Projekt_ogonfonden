@@ -1,11 +1,16 @@
 #include "esp_now_functions.h"
 
-void esp_now_send_wrapper(uint16_t* message, char* esp_now_send_buffer, uint8_t* mac_adress)
+void esp_now_send_wrapper(uint16_t* message, char* esp_now_send_buffer, uint8_t* mac_adress_left, uint8_t* mac_adress_right)
 {
-       sprintf(esp_now_send_buffer, "%d%d%d%d%d%d%d%d%d%d", message[0], message[1], 
-       message[2], message[3], message[4], message[5], 
-       message[6], message[7], message[8], message[9]);
-       esp_now_send(mac_adress, (uint8_t*) esp_now_send_buffer, strlen(esp_now_send_buffer));
+    //Send to left
+    sprintf(esp_now_send_buffer, "\n|%d|%d|%d|\n|%d|%d|%d|", message[9], message[8], 
+    message[7], message[4], message[3], message[2]);
+    esp_now_send(mac_adress_left, (uint8_t*) esp_now_send_buffer, strlen(esp_now_send_buffer));
+
+    //Send to right
+    sprintf(esp_now_send_buffer, "\n|%d|%d|%d|\n|%d|%d|%d|", message[7], message[6], 
+    message[5], message[2], message[1], message[0]);
+    esp_now_send(mac_adress_right, (uint8_t*) esp_now_send_buffer, strlen(esp_now_send_buffer));
 }
 
 void esp_now_add_peer_wrapper(uint8_t* mac_adress_sender)
