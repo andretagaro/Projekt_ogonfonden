@@ -66,7 +66,7 @@ void on_sent_callback(const uint8_t *sent_to_mac_addr, esp_now_send_status_t sta
     case ESP_NOW_SEND_SUCCESS: ;
         char convert_mac_addr[(MAC_SIZE*2)+1];
         mac_adress_to_string(convert_mac_addr, (uint8_t*) sent_to_mac_addr);
-        printf("Message sent to %s! :)\n\n", convert_mac_addr);
+        printf("Message sent to %s.\n", convert_mac_addr);
         break;
     case ESP_NOW_SEND_FAIL:
         printf("Transmission failed! :(\n\n");

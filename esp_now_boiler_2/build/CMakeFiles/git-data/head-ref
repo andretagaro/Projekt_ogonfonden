@@ -1,1 +1,12 @@
-f397a17023f7b35e53efb76edc669dfa90260e65
+0000000000000000000000000000000000000000 3c58f17882d747c317b36340ee1802f3a79de12d andretagaro <tagaroandersson@gmail.com> 1661157951 +0200	commit (initial): uppladdning av readme
+3c58f17882d747c317b36340ee1802f3a79de12d 3c58f17882d747c317b36340ee1802f3a79de12d andretagaro <tagaroandersson@gmail.com> 1661157961 +0200	Branch: renamed refs/heads/master to refs/heads/main
+3c58f17882d747c317b36340ee1802f3a79de12d 83d7ecd6d394b43be5a4d8017fbcb7407afe5637 andretagaro <tagaroandersson@gmail.com> 1661167331 +0200	commit: i2c init uppladdat
+83d7ecd6d394b43be5a4d8017fbcb7407afe5637 0bfbdbc88b9f15e129aa8c4c17d511ad996146b5 andretagaro <tagaroandersson@gmail.com> 1661260556 +0200	commit: påbörjat platform.c/h
+0bfbdbc88b9f15e129aa8c4c17d511ad996146b5 24cc3396d0bcb9c67efd6c20bea9eb7162db0c93 andretagaro <tagaroandersson@gmail.com> 1661263834 +0200	commit: påbörjat platform.c/h
+24cc3396d0bcb9c67efd6c20bea9eb7162db0c93 b375c8e056f7f264d88717815623d85f786c2e77 andretagaro <tagaroandersson@gmail.com> 1661330494 +0200	commit: platform verkar fungera :)
+b375c8e056f7f264d88717815623d85f786c2e77 212a3b76ac478a7ae38a885246b391a2b04a1c1a andretagaro <tagaroandersson@gmail.com> 1661334171 +0200	commit: inläsning från sensor i enkelt utförande fungerar
+212a3b76ac478a7ae38a885246b391a2b04a1c1a 883e58e3a6760e995ea5012b2e2b1b22b57280a4 andretagaro <tagaroandersson@gmail.com> 1661344951 +0200	commit: inläsning från 2 sensorer fungerar
+883e58e3a6760e995ea5012b2e2b1b22b57280a4 d1503a4cb7e34131f6dd4f9162479e7b42c8617f andretagaro <tagaroandersson@gmail.com> 1661352112 +0200	commit: ESP-NOW-överföring påbörjad
+d1503a4cb7e34131f6dd4f9162479e7b42c8617f 5141930208db517c9d899b210efc7296b10489d9 andretagaro <tagaroandersson@gmail.com> 1661417236 +0200	commit: ESP-NOW-överföring fungerar
+5141930208db517c9d899b210efc7296b10489d9 f397a17023f7b35e53efb76edc669dfa90260e65 andretagaro <tagaroandersson@gmail.com> 1661430040 +0200	commit: cleanup
+f397a17023f7b35e53efb76edc669dfa90260e65 4ba8c604f55e671aa82a34ce26e8f4b2df709af0 andretagaro <tagaroandersson@gmail.com> 1661523570 +0200	commit: utskick till två enheter fungerar nu
