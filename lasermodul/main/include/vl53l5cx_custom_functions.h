@@ -14,8 +14,7 @@
 
 void init_sensor(VL53L5CX_Configuration* sensor_n);
 void get_single_measurement_blocking(VL53L5CX_Configuration *sensor_n, VL53L5CX_ResultsData *results_n);
-void print_sensor_data(VL53L5CX_ResultsData* results_1, VL53L5CX_ResultsData* results_2);
+void print_sensor_data(VL53L5CX_ResultsData* results_right, VL53L5CX_ResultsData* results_left);
 void change_address_sensor(VL53L5CX_Configuration* sensor_to_change);
-void group_result_to_segments(VL53L5CX_ResultsData* results1, VL53L5CX_ResultsData* results2, uint16_t* group_results);
-void print_segments(uint16_t* group_results);
+void group_result_to_segments_12_mode_even(VL53L5CX_ResultsData* results_right, VL53L5CX_ResultsData* results_left, uint16_t* grouped_results_sensor_right, uint16_t* grouped_results_sensor_left);
 #endif

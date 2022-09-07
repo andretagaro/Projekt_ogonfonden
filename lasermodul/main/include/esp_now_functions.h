@@ -20,6 +20,6 @@ void activate_esp_now(void);
 void on_received_callback(const uint8_t *mac_addr, const uint8_t *data, int data_len);
 void on_sent_callback(const uint8_t *sent_to_mac_addr, esp_now_send_status_t status);
 void esp_now_add_peer_wrapper(uint8_t* mac_adress_sender);
-void esp_now_send_wrapper(uint16_t* message, char* esp_now_send_buffer, uint8_t* mac_adress_left, uint8_t* mac_adress_right);
+void esp_now_send_wrapper(uint16_t* grouped_results_sensor_right, uint16_t* group_results_sensor_left, char* esp_now_send_buffer, uint8_t* mac_adress_left, uint8_t* mac_adress_right);
 
 #endif

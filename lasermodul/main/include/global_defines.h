@@ -9,24 +9,24 @@
 
 
 /* I2C DEFINES */
-#define SDA_GPIO 2 
-#define SCL_GPIO 3
+#define SDA_GPIO 23
+#define SCL_GPIO 22
 #define I2C_FREQ 1000000
 /* --------------- */
 
 
 /*VL53L5CX DEFINES */
-#define LP_1_PIN 7
-#define INT_1_PIN 6
-#define RST_1_PIN 9
-#define PWR_ENABLE_1_PIN 8
+#define LP_RIGHT_PIN 27
+#define INT_RIGHT_PIN 26
+#define RST_RIGHT_PIN 15
+#define PWR_ENABLE_RIGHT_PIN 13
 
-#define LP_2_PIN 4
-#define INT_2_PIN 0
-#define RST_2_PIN 1
-#define PWR_ENABLE_2_PIN 10
+#define LP_LEFT_PIN 33
+#define INT_LEFT_PIN 25
+#define RST_LEFT_PIN 32
+#define PWR_ENABLE_LEFT_PIN 12
 
-#define SENSOR_2_ADDRESS 0x22
+#define SENSOR_LEFT_ADDRESS 0x22
 /* --------------- */
 
 #endif

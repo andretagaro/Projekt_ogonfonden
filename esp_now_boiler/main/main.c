@@ -5,7 +5,7 @@
 #define CELL_0 21
 #define OFF 0
 #define ON 1
-#define CELL_AMOUNT 1
+#define CELL_AMOUNT 6
 #define MAX_VALUE_CARED_ABOUT 400
 #define CLOSE_THRESHOLD 200
 
@@ -127,7 +127,7 @@ void update_cells(void* args)
 
 void pulsate_cells(void *args)
 { 
-    esp_timer_stop(update_cells_timer_handle); // us.
+    esp_timer_stop(update_cells_timer_handle);
 	for(uint8_t i = 0; i < CELL_AMOUNT; i++)
 	{
 		if(cells[i].cell_close == true)
@@ -142,11 +142,8 @@ void pulsate_cells(void *args)
 	}
     esp_timer_start_once(pulsate_cells_timer_handle, 100000); // us.
     esp_timer_start_once(update_cells_timer_handle, 50); // us.
-	//count_since_data_arrived++;
-	//if(count_since_data_arrived == UINT8_MAX)
-	//{
-	//	count_since_data_arrived = UINT8_MAX - (UINT8_MAX - (RECEPTION_THRESHOLD - 1));
-	//}
+
+	//Implementera funktion för att undersöka när senaste mottagningen kom.
 }
 
 

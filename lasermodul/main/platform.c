@@ -194,24 +194,24 @@ uint8_t Reset_Sensor(
 	{
 		ESP_LOGI("Reset_Sensor", "reseting sensor 1");
 
-		status |= gpio_set_level(LP_1_PIN, OFF);
-		status |= gpio_set_level(PWR_ENABLE_1_PIN, OFF);
+		status |= gpio_set_level(LP_RIGHT_PIN, OFF);
+		status |= gpio_set_level(PWR_ENABLE_RIGHT_PIN, OFF);
 		WaitMs(p_platform, 100);
 
-		status |= gpio_set_level(LP_1_PIN, ON);
-		status |= gpio_set_level(PWR_ENABLE_1_PIN, ON);
+		status |= gpio_set_level(LP_RIGHT_PIN, ON);
+		status |= gpio_set_level(PWR_ENABLE_RIGHT_PIN, ON);
 		WaitMs(p_platform, 100);
 	}
 	else if(p_platform->id == 2)
 	{
 		ESP_LOGI("Reset_Sensor", "reseting sensor 2");
 			
-		status |= gpio_set_level(LP_2_PIN, OFF);
-		status |= gpio_set_level(PWR_ENABLE_2_PIN, OFF);
+		status |= gpio_set_level(LP_LEFT_PIN, OFF);
+		status |= gpio_set_level(PWR_ENABLE_LEFT_PIN, OFF);
 		WaitMs(p_platform, 100);
 
-		status |= gpio_set_level(LP_2_PIN, ON);
-		status |= gpio_set_level(PWR_ENABLE_2_PIN, ON);
+		status |= gpio_set_level(LP_LEFT_PIN, ON);
+		status |= gpio_set_level(PWR_ENABLE_LEFT_PIN, ON);
 		WaitMs(p_platform, 100);
 
 	}

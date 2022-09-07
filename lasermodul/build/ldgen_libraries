@@ -25,9 +25,10 @@ C:/Users/46768/Documents/projekt_ogonfonden/lasermodul/build/esp-idf/soc/libsoc.
 C:/Users/46768/Documents/projekt_ogonfonden/lasermodul/build/esp-idf/esp_hw_support/libesp_hw_support.a
 C:/Users/46768/Documents/projekt_ogonfonden/lasermodul/build/esp-idf/esp_ringbuf/libesp_ringbuf.a
 C:/Users/46768/Documents/projekt_ogonfonden/lasermodul/build/esp-idf/driver/libdriver.a
-C:/Users/46768/Documents/projekt_ogonfonden/lasermodul/build/esp-idf/riscv/libriscv.a
+C:/Users/46768/Documents/projekt_ogonfonden/lasermodul/build/esp-idf/xtensa/libxtensa.a
 C:/Users/46768/Documents/projekt_ogonfonden/lasermodul/build/esp-idf/espcoredump/libespcoredump.a
-C:/Users/46768/Documents/projekt_ogonfonden/lasermodul/build/esp-idf/esp32c3/libesp32c3.a
+C:/Users/46768/Documents/projekt_ogonfonden/lasermodul/build/esp-idf/perfmon/libperfmon.a
+C:/Users/46768/Documents/projekt_ogonfonden/lasermodul/build/esp-idf/esp32/libesp32.a
 C:/Users/46768/Documents/projekt_ogonfonden/lasermodul/build/esp-idf/esp_common/libesp_common.a
 C:/Users/46768/Documents/projekt_ogonfonden/lasermodul/build/esp-idf/esp_timer/libesp_timer.a
 C:/Users/46768/Documents/projekt_ogonfonden/lasermodul/build/esp-idf/freertos/libfreertos.a
@@ -65,5 +66,6 @@ C:/Users/46768/Documents/projekt_ogonfonden/lasermodul/build/esp-idf/libsodium/l
 C:/Users/46768/Documents/projekt_ogonfonden/lasermodul/build/esp-idf/mqtt/libmqtt.a
 C:/Users/46768/Documents/projekt_ogonfonden/lasermodul/build/esp-idf/openssl/libopenssl.a
 C:/Users/46768/Documents/projekt_ogonfonden/lasermodul/build/esp-idf/spiffs/libspiffs.a
+C:/Users/46768/Documents/projekt_ogonfonden/lasermodul/build/esp-idf/ulp/libulp.a
 C:/Users/46768/Documents/projekt_ogonfonden/lasermodul/build/esp-idf/wifi_provisioning/libwifi_provisioning.a
 C:/Users/46768/Documents/projekt_ogonfonden/lasermodul/build/esp-idf/main/libmain.a

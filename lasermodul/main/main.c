@@ -16,9 +16,9 @@
 void init_gpio(void);
 void i2c_init_master(const uint8_t SDA_LINE, const uint8_t SCL_LINE, const uint32_t FREQ, const uint8_t PORT);
 
-uint8_t mac_adress_sender[MAC_SIZE] = {0x84,0xf7,0x03,0x0b,0xd1,0x2c}; // this is my mac.
+uint8_t mac_adress_right[MAC_SIZE] = {0x84, 0xf7, 0x03, 0x0b, 0xd1, 0x2c};
 uint8_t mac_adress_left[MAC_SIZE] = {0x84, 0xf7, 0x03, 0x0b, 0xdd, 0x5c};
-uint8_t mac_adress_right[MAC_SIZE] = {0xfc, 0xf5, 0xc4, 0x09, 0x61, 0x90};
+uint8_t mac_adress_sender[MAC_SIZE] = {0xfc, 0xf5, 0xc4, 0x09, 0x61, 0x90};// this is my mac.
 
 void app_main(void)
 {   
@@ -33,27 +33,28 @@ void app_main(void)
     init_gpio();
 
     /* Sensor setup block */
-    uint16_t grouped_results[10] = {0};
+    uint16_t grouped_results_sensor_right[6] = {0};
+    uint16_t grouped_results_sensor_left[6] = {0};
 
-    VL53L5CX_Configuration *sensor_1 = malloc(sizeof(VL53L5CX_Configuration));
-    sensor_1->platform.address = VL53L5CX_DEFAULT_I2C_ADDRESS;
-    sensor_1->platform.port = 0;
-    sensor_1->platform.id = 1;
+    VL53L5CX_Configuration *sensor_right = malloc(sizeof(VL53L5CX_Configuration));
+    sensor_right->platform.address = VL53L5CX_DEFAULT_I2C_ADDRESS;
+    sensor_right->platform.port = 0;
+    sensor_right->platform.id = 1;
 
-    VL53L5CX_Configuration *sensor_2 = malloc(sizeof(VL53L5CX_Configuration));
-    sensor_2->platform.address = VL53L5CX_DEFAULT_I2C_ADDRESS;
-    sensor_2->platform.port = 0;
-    sensor_2->platform.id = 2;
+    VL53L5CX_Configuration *sensor_left = malloc(sizeof(VL53L5CX_Configuration));
+    sensor_left->platform.address = VL53L5CX_DEFAULT_I2C_ADDRESS;
+    sensor_left->platform.port = 0;
+    sensor_left->platform.id = 2;
 
-    VL53L5CX_ResultsData *results_1 = malloc(sizeof(VL53L5CX_ResultsData));
-    VL53L5CX_ResultsData *results_2 = malloc(sizeof(VL53L5CX_ResultsData));
+    VL53L5CX_ResultsData *results_right = malloc(sizeof(VL53L5CX_ResultsData));
+    VL53L5CX_ResultsData *results_left = malloc(sizeof(VL53L5CX_ResultsData));
 
-    Reset_Sensor(&((*sensor_1).platform));
-    Reset_Sensor(&((*sensor_2).platform));
-    change_address_sensor(sensor_2);
+    Reset_Sensor(&((*sensor_right).platform));
+    Reset_Sensor(&((*sensor_left).platform));
+    change_address_sensor(sensor_left);
 
-    init_sensor(sensor_2);
-    init_sensor(sensor_1);
+    init_sensor(sensor_left);
+    init_sensor(sensor_right);
     /* ---------------------------------- */
 
     activate_esp_now();
@@ -63,15 +64,16 @@ void app_main(void)
 
     for(;;)
     {
-       get_single_measurement_blocking(sensor_1, results_1);
-       get_single_measurement_blocking(sensor_2, results_2);
-       group_result_to_segments(results_1, results_2, grouped_results);
-       esp_now_send_wrapper(grouped_results, esp_now_send_buffer, mac_adress_left, mac_adress_right);	
-       vTaskDelay(portTICK_PERIOD_MS); // This gives the system time to reset the WDT. 
+       get_single_measurement_blocking(sensor_right, results_right);
+       get_single_measurement_blocking(sensor_left, results_left);
+       group_result_to_segments_12_mode_even(results_right, results_left, grouped_results_sensor_right, grouped_results_sensor_left);
+       esp_now_send_wrapper(grouped_results_sensor_right, grouped_results_sensor_left, esp_now_send_buffer, mac_adress_left, mac_adress_right);	
+       vTaskDelay(portTICK_PERIOD_MS); // This gives the system time to reset the WDT.
+
+
 
        /* debug section */
-       // print_segments(grouped_results);
-       // print_sensor_data(results_1, results_2);
+       //print_sensor_data(results_right, results_left);
        /* ------------- */
     }
 }
@@ -94,23 +96,23 @@ void i2c_init_master(const uint8_t SDA_LINE, const uint8_t SCL_LINE, const uint3
 
 void init_gpio(void)
 {
-    gpio_pad_select_gpio(LP_1_PIN);
-    gpio_pad_select_gpio(INT_1_PIN);
-    gpio_pad_select_gpio(RST_1_PIN);
-    gpio_pad_select_gpio(PWR_ENABLE_1_PIN);
-    gpio_pad_select_gpio(LP_2_PIN);
-    gpio_pad_select_gpio(INT_2_PIN);
-    gpio_pad_select_gpio(RST_2_PIN);
-    gpio_pad_select_gpio(PWR_ENABLE_2_PIN);
+    gpio_pad_select_gpio(LP_RIGHT_PIN);
+    gpio_pad_select_gpio(INT_RIGHT_PIN);
+    gpio_pad_select_gpio(RST_RIGHT_PIN);
+    gpio_pad_select_gpio(PWR_ENABLE_RIGHT_PIN);
+    gpio_pad_select_gpio(LP_LEFT_PIN);
+    gpio_pad_select_gpio(INT_LEFT_PIN);
+    gpio_pad_select_gpio(RST_LEFT_PIN);
+    gpio_pad_select_gpio(PWR_ENABLE_LEFT_PIN);
 
-    ESP_ERROR_CHECK(gpio_set_direction(LP_1_PIN, GPIO_MODE_OUTPUT));
-    ESP_ERROR_CHECK(gpio_set_direction(RST_1_PIN, GPIO_MODE_OUTPUT));
-    ESP_ERROR_CHECK(gpio_set_direction(PWR_ENABLE_1_PIN, GPIO_MODE_OUTPUT));
-    ESP_ERROR_CHECK(gpio_set_direction(INT_1_PIN, GPIO_MODE_INPUT));
-    ESP_ERROR_CHECK(gpio_set_direction(LP_2_PIN, GPIO_MODE_OUTPUT));
-    ESP_ERROR_CHECK(gpio_set_direction(RST_2_PIN, GPIO_MODE_OUTPUT));
-    ESP_ERROR_CHECK(gpio_set_direction(PWR_ENABLE_2_PIN, GPIO_MODE_OUTPUT));
-    ESP_ERROR_CHECK(gpio_set_direction(INT_2_PIN, GPIO_MODE_INPUT));
+    ESP_ERROR_CHECK(gpio_set_direction(LP_RIGHT_PIN, GPIO_MODE_OUTPUT));
+    ESP_ERROR_CHECK(gpio_set_direction(RST_RIGHT_PIN, GPIO_MODE_OUTPUT));
+    ESP_ERROR_CHECK(gpio_set_direction(PWR_ENABLE_RIGHT_PIN, GPIO_MODE_OUTPUT));
+    ESP_ERROR_CHECK(gpio_set_direction(INT_RIGHT_PIN, GPIO_MODE_INPUT));
+    ESP_ERROR_CHECK(gpio_set_direction(LP_LEFT_PIN, GPIO_MODE_OUTPUT));
+    ESP_ERROR_CHECK(gpio_set_direction(RST_LEFT_PIN, GPIO_MODE_OUTPUT));
+    ESP_ERROR_CHECK(gpio_set_direction(PWR_ENABLE_LEFT_PIN, GPIO_MODE_OUTPUT));
+    ESP_ERROR_CHECK(gpio_set_direction(INT_LEFT_PIN, GPIO_MODE_INPUT));
 
     ESP_LOGI("INIT_GPIO", "gpios set");
 }
