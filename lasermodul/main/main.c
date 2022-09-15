@@ -16,19 +16,20 @@
 void init_gpio(void);
 void i2c_init_master(const uint8_t SDA_LINE, const uint8_t SCL_LINE, const uint32_t FREQ, const uint8_t PORT);
 
-uint8_t mac_adress_right[MAC_SIZE] = {0x84, 0xf7, 0x03, 0x0b, 0xd1, 0x2c};
-uint8_t mac_adress_left[MAC_SIZE] = {0x84, 0xf7, 0x03, 0x0b, 0xdd, 0x5c};
-uint8_t mac_adress_sender[MAC_SIZE] = {0xfc, 0xf5, 0xc4, 0x09, 0x61, 0x90};// this is my mac.
+uint8_t mac_adress_right[MAC_SIZE] = {0x8c, 0x4b, 0x14, 0x0e, 0xf4, 0x9c};
+uint8_t mac_adress_left[MAC_SIZE] = {0x40, 0x91, 0x51, 0x2d, 0x0f, 0xa4};
+uint8_t mac_adress_sender[MAC_SIZE] = {0xfc, 0xf5, 0xc4, 0x09, 0x61, 0x90};
 
 void app_main(void)
 {   
+    print_mac_adress_as_hex_string();
+
     for(uint8_t begin_loop = 3; begin_loop > 0; begin_loop--)
     {
         vTaskDelay(500/portTICK_PERIOD_MS);
         printf("Beggining in %d...\n", begin_loop);
     }
 
-    print_mac_adress_as_hex_string();
     i2c_init_master(SDA_GPIO, SCL_GPIO, I2C_FREQ, 0);
     init_gpio();
 
@@ -73,7 +74,7 @@ void app_main(void)
 
 
        /* debug section */
-       //print_sensor_data(results_right, results_left);
+       print_sensor_data(results_right, results_left);
        /* ------------- */
     }
 }
