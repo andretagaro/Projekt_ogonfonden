@@ -3,12 +3,16 @@
 void esp_now_send_wrapper(uint16_t* grouped_results_sensor_right, uint16_t* grouped_results_sensor_left, char* esp_now_send_buffer, uint8_t* mac_adress_left, uint8_t* mac_adress_right)
 {
 
-    sprintf(esp_now_send_buffer, "\n|%d|%d|%d|\n|%d|%d|%d|", grouped_results_sensor_right[3], grouped_results_sensor_right[4], 
-    grouped_results_sensor_right[5], grouped_results_sensor_right[0], grouped_results_sensor_right[1], grouped_results_sensor_right[2]);
+    //sprintf(esp_now_send_buffer, "\n|%d|%d|%d|\n|%d|%d|%d|", grouped_results_sensor_right[3], grouped_results_sensor_right[4], 
+    //grouped_results_sensor_right[5], grouped_results_sensor_right[0], grouped_results_sensor_right[1], grouped_results_sensor_right[2]);
+    sprintf(esp_now_send_buffer, "D%03d%03d%03d%03d%03d%03d", grouped_results_sensor_right[0], grouped_results_sensor_right[1], grouped_results_sensor_right[2],
+    grouped_results_sensor_right[3], grouped_results_sensor_right[4], grouped_results_sensor_right[5]);
     esp_now_send(mac_adress_right, (uint8_t*) esp_now_send_buffer, strlen(esp_now_send_buffer));
 
-    sprintf(esp_now_send_buffer, "\n|%d|%d|%d|\n|%d|%d|%d|", grouped_results_sensor_left[3], grouped_results_sensor_left[4], 
-    grouped_results_sensor_left[5], grouped_results_sensor_left[0], grouped_results_sensor_left[1], grouped_results_sensor_left[2]);
+    //sprintf(esp_now_send_buffer, "\n|%d|%d|%d|\n|%d|%d|%d|", grouped_results_sensor_left[3], grouped_results_sensor_left[4],
+    //grouped_results_sensor_left[5], grouped_results_sensor_left[0], grouped_results_sensor_left[1], grouped_results_sensor_left[2]);
+    sprintf(esp_now_send_buffer, "D%03d%03d%03d%03d%03d%03d", grouped_results_sensor_left[0], grouped_results_sensor_left[1], grouped_results_sensor_left[2],
+    grouped_results_sensor_left[3], grouped_results_sensor_left[4], grouped_results_sensor_left[5]);
     esp_now_send(mac_adress_left, (uint8_t*) esp_now_send_buffer, strlen(esp_now_send_buffer));
 }
 

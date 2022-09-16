@@ -74,7 +74,7 @@ void app_main(void)
 
 
        /* debug section */
-       print_sensor_data(results_right, results_left);
+       //print_sensor_data(results_right, results_left);
        /* ------------- */
     }
 }

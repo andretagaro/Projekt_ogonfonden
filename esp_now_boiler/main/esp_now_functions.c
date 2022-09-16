@@ -1,5 +1,14 @@
 #include "esp_now_functions.h"
+#include "global_defines.h"
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdbool.h>
 
+extern cell cells[CELL_AMOUNT];
+extern esp_timer_handle_t update_cells_timer_handle;
+extern esp_timer_handle_t pulsate_cells_timer_handle;
+bool received_data = false;
 
 void esp_now_add_peer_wrapper(uint8_t* mac_adress_sender)
 {
@@ -8,7 +17,6 @@ void esp_now_add_peer_wrapper(uint8_t* mac_adress_sender)
     memcpy(peer_to_add.peer_addr, mac_adress_sender, MAC_SIZE);
     ESP_ERROR_CHECK(esp_now_add_peer(&peer_to_add));
 }
-
 
 void mac_adress_to_string(char* my_mac_as_string, uint8_t* mac_adress_array)
 {
@@ -40,11 +48,66 @@ void activate_esp_now(void)
     ESP_ERROR_CHECK(esp_now_register_recv_cb(on_received_callback));
 }
 
+uint16_t delinearize(uint16_t distance_value)
+{
+	if(distance_value >= MAX_VALUE_CARED_ABOUT)
+	{
+		return MAX_VALUE_CARED_ABOUT;
+	}
+	else
+	{
+		return distance_value;
+	}
+
+}
+
 void on_received_callback(const uint8_t *mac_addr, const uint8_t *data, int data_len)
 {
-    char convert_mac_addr[(MAC_SIZE*2)+1];
-    mac_adress_to_string(convert_mac_addr, (uint8_t*) mac_addr);
-    //printf("Received from mac adress: %s\n", convert_mac_addr);
+    char convert_asci_to_integer[4];
+
+    if(data[0] == 'D' && received_data == false)
+	{
+		received_data = true;
+		printf("First receive OK!");
+		char convert_asci_to_integer[4];
+
+		uint8_t j = 0;
+		for(uint8_t i = 1; i < data_len; i = i + 3)
+		{
+			convert_asci_to_integer[0] = data[i];
+			convert_asci_to_integer[1] = data[i + 1];
+			convert_asci_to_integer[2] = data[i + 2];
+			convert_asci_to_integer[3] = '\0';
+		
+			cells[j].cell_value = delinearize((uint16_t)(atoi(convert_asci_to_integer)));
+			cells[j].cell_off_counter = cells[j].cell_value;
+			cells[j].cell_on_counter = MAX_VALUE_CARED_ABOUT - cells[j].cell_value;
+			j++;
+		}
+		
+        esp_timer_start_once(update_cells_timer_handle, 50); // us.
+        esp_timer_start_once(pulsate_cells_timer_handle, 100000);
+	}
+	else if(data[0] == 'D' && received_data == true)
+	{
+		char convert_asci_to_integer[4];
+
+	    uint8_t j = 0;
+		for(uint8_t i = 1; i < data_len; i = i + 3)
+		{
+			convert_asci_to_integer[0] = data[i];
+			convert_asci_to_integer[1] = data[i + 1];
+			convert_asci_to_integer[2] = data[i + 2];
+			convert_asci_to_integer[3] = '\0';
+		
+			cells[j].cell_value = delinearize((uint16_t)(atoi(convert_asci_to_integer)));
+			j++;
+		}
+	}
+	else
+	{
+		printf("Something is wrong with the data transfer, no starting D is found!\n");
+	}
     printf("%.*s\n\n", data_len, data);
 }
 
