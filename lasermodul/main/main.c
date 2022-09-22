@@ -12,9 +12,11 @@
 #include "esp_wifi.h"
 #include "nvs_flash.h"
 #include "esp_now.h"
+#include "driver/adc.h"
 
 void init_gpio(void);
 void i2c_init_master(const uint8_t SDA_LINE, const uint8_t SCL_LINE, const uint32_t FREQ, const uint8_t PORT);
+void config_adc(void);
 
 uint8_t mac_adress_right[MAC_SIZE] = {0x8c, 0x4b, 0x14, 0x0e, 0xf4, 0x9c};
 uint8_t mac_adress_left[MAC_SIZE] = {0x40, 0x91, 0x51, 0x2d, 0x0f, 0xa4};
@@ -32,6 +34,8 @@ void app_main(void)
 
     i2c_init_master(SDA_GPIO, SCL_GPIO, I2C_FREQ, 0);
     init_gpio();
+    uint16_t half_battery_voltage = 0;
+    config_adc();
 
     /* Sensor setup block */
     uint16_t grouped_results_sensor_right[6] = {0};
@@ -63,19 +67,22 @@ void app_main(void)
     esp_now_add_peer_wrapper(mac_adress_right);
     char esp_now_send_buffer[MAX_ESP_NOW_SIZE];
 
+
     for(;;)
     {
-       get_single_measurement_blocking(sensor_right, results_right);
-       get_single_measurement_blocking(sensor_left, results_left);
-       group_result_to_segments_12_mode_even(results_right, results_left, grouped_results_sensor_right, grouped_results_sensor_left);
-       esp_now_send_wrapper(grouped_results_sensor_right, grouped_results_sensor_left, esp_now_send_buffer, mac_adress_left, mac_adress_right);	
-       vTaskDelay(portTICK_PERIOD_MS); // This gives the system time to reset the WDT.
+        get_single_measurement_blocking(sensor_right, results_right);
+        get_single_measurement_blocking(sensor_left, results_left);
+        group_result_to_segments_12_mode_even(results_right, results_left, grouped_results_sensor_right, grouped_results_sensor_left);
+        esp_now_send_wrapper(grouped_results_sensor_right, grouped_results_sensor_left, esp_now_send_buffer, mac_adress_left, mac_adress_right);	
+        vTaskDelay(portTICK_PERIOD_MS); // This gives the system time to reset the WDT.
 
+        //half_battery_voltage = adc1_get_raw(ADC1_CHANNEL_7);
+        //half_battery_voltage = (2 * 8 * half_battery_voltage) / 10;  
+        //printf("Battery in mV is: %d\n", half_battery_voltage);
 
-
-       /* debug section */
-       //print_sensor_data(results_right, results_left);
-       /* ------------- */
+        /* debug section */
+        //print_sensor_data(results_right, results_left);
+        /* ------------- */
     }
 }
 
@@ -116,4 +123,10 @@ void init_gpio(void)
     ESP_ERROR_CHECK(gpio_set_direction(INT_LEFT_PIN, GPIO_MODE_INPUT));
 
     ESP_LOGI("INIT_GPIO", "gpios set");
+}
+
+void config_adc(void)
+{
+    adc1_config_width(ADC_WIDTH_BIT_12);
+    adc1_config_channel_atten(ADC1_CHANNEL_7, ADC_ATTEN_DB_11);
 }

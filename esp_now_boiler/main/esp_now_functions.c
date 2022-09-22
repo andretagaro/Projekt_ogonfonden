@@ -8,7 +8,8 @@
 extern cell cells[CELL_AMOUNT];
 extern esp_timer_handle_t update_cells_timer_handle;
 extern esp_timer_handle_t pulsate_cells_timer_handle;
-bool received_data = false;
+extern bool received_data;
+extern uint16_t count_since_last_reception;
 
 void esp_now_add_peer_wrapper(uint8_t* mac_adress_sender)
 {
@@ -63,6 +64,7 @@ uint16_t delinearize(uint16_t distance_value)
 
 void on_received_callback(const uint8_t *mac_addr, const uint8_t *data, int data_len)
 {
+	count_since_last_reception = 0;
     char convert_asci_to_integer[4];
 
     if(data[0] == 'D' && received_data == false)

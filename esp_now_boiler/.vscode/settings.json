@@ -14,6 +14,7 @@
     "idf.toolsPathWin": "c:\\esp\\tools",
     "idf.flashType": "UART",
     "files.associations": {
-        "esp_now_functions.h": "c"
+        "esp_now_functions.h": "c",
+        "global_defines.h": "c"
     }
 }

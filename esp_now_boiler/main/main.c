@@ -13,11 +13,16 @@ void activate_corresponding_motor(uint8_t i);
 void deactivate_corresponding_motor(uint8_t i);
 void update_which_cells_are_close(void);
 void pulsate_cells(void *args);
+void all_cells_off(void);
+void wait_for_reception(void);
+void all_cells_off(void);
+void no_data_received(void);
 
 cell cells[CELL_AMOUNT] = {0};
 esp_timer_handle_t update_cells_timer_handle;
 esp_timer_handle_t pulsate_cells_timer_handle;
-uint8_t count_since_last_reception;
+uint16_t count_since_last_reception = 0;
+bool received_data = false;
 
 void app_main(void)
 {
@@ -29,30 +34,65 @@ void app_main(void)
         .name = "update cells"
     };
     esp_timer_create(&update_cells_timer, &update_cells_timer_handle);
-    //esp_timer_start_once(update_cells_timer_handle, 50); // us.
 
     const esp_timer_create_args_t pulsate_cells_timer = {
     .callback = pulsate_cells,
     .name = "pulsate cells"
     };
     esp_timer_create(&pulsate_cells_timer, &pulsate_cells_timer_handle);
-    //esp_timer_start_once(pulsate_cells_timer_handle, 100000); // us.
-
 
     print_mac_adress_as_hex_string();
     activate_esp_now();
     esp_now_add_peer_wrapper(mac_adress_sender);
     esp_now_add_peer_wrapper(mac_adress_left);
 
-    //cells[0].cell_value = 400;
-    //cells[0].cell_on_counter = MAX_VALUE_CARED_ABOUT - cells[0].cell_value;
-    //cells[0].cell_off_counter = cells[0].cell_value;
 
     for(;;)
     {
+		count_since_last_reception++;
+		if(count_since_last_reception >= RECEPTION_THRESHOLD)
+		{
+			wait_for_reception();
+		}
+
 		update_which_cells_are_close();
 		vTaskDelay(1);
     }
+}
+
+void wait_for_reception(void)
+{	
+	received_data = false;
+	esp_timer_stop(update_cells_timer_handle);
+	esp_timer_stop(pulsate_cells_timer_handle);
+	all_cells_off();
+	while(count_since_last_reception >= RECEPTION_THRESHOLD)
+	{
+		ESP_LOGI("wait_for_reception", "no data arrived...");
+		no_data_received();
+	}
+}
+
+void no_data_received(void)
+{
+	gpio_set_level(CELL_0, ON);
+	vTaskDelay(100/portTICK_PERIOD_MS);
+	gpio_set_level(CELL_0, OFF);
+	vTaskDelay(400/portTICK_PERIOD_MS);
+	gpio_set_level(CELL_5, ON);
+	vTaskDelay(100/portTICK_PERIOD_MS);
+	gpio_set_level(CELL_5, OFF);
+	vTaskDelay(400/portTICK_PERIOD_MS);
+}
+
+void all_cells_off(void)
+{
+	gpio_set_level(CELL_0, OFF);
+	gpio_set_level(CELL_1, OFF);
+	gpio_set_level(CELL_2, OFF);
+	gpio_set_level(CELL_3, OFF);
+	gpio_set_level(CELL_4, OFF);
+	gpio_set_level(CELL_5, OFF);
 }
 
 void init_gpio()
