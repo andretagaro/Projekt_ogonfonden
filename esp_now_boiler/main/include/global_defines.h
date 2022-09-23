@@ -14,6 +14,7 @@
 #define MAX_VALUE_CARED_ABOUT 200
 #define CLOSE_THRESHOLD 40
 #define RECEPTION_THRESHOLD 50
+#define BATT_LIMIT 3200
 
 struct cell
 {

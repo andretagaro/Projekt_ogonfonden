@@ -14,6 +14,8 @@
 #define I2C_FREQ 1000000
 /* --------------- */
 
+/* battery pin */
+#define BATTERY_INDICATOR_LED 4
 
 /*VL53L5CX DEFINES */
 #define LP_RIGHT_PIN 27

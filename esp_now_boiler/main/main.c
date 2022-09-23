@@ -2,6 +2,7 @@
 #include "esp_now_functions.h"
 #include "esp_timer.h"
 #include "global_defines.h"
+#include "driver/adc.h"
 
 uint8_t mac_adress_right[MAC_SIZE] = {0x8c, 0x4b, 0x14, 0x0e, 0xf4, 0x9c};
 uint8_t mac_adress_left[MAC_SIZE] = {0x40, 0x91, 0x51, 0x2d, 0x0f, 0xa4};
@@ -17,12 +18,15 @@ void all_cells_off(void);
 void wait_for_reception(void);
 void all_cells_off(void);
 void no_data_received(void);
+void config_adc(void);
+bool is_battery_under_in_mv(uint16_t limit);
+void check_battery(void);
 
 cell cells[CELL_AMOUNT] = {0};
 esp_timer_handle_t update_cells_timer_handle;
 esp_timer_handle_t pulsate_cells_timer_handle;
 uint16_t count_since_last_reception = 0;
-bool received_data = false;
+bool timers_on = false;
 
 void app_main(void)
 {
@@ -46,7 +50,9 @@ void app_main(void)
     esp_now_add_peer_wrapper(mac_adress_sender);
     esp_now_add_peer_wrapper(mac_adress_left);
 
+	config_adc();
 
+    uint8_t check_battery_level_counter = 255;
     for(;;)
     {
 		count_since_last_reception++;
@@ -54,21 +60,73 @@ void app_main(void)
 		{
 			wait_for_reception();
 		}
-
+		if(check_battery_level_counter == 255)
+        {   
+            check_battery_level_counter = 0;
+			check_battery();
+        }
+        check_battery_level_counter++;
 		update_which_cells_are_close();
 		vTaskDelay(1);
     }
 }
 
+void check_battery(void)
+{
+	bool is_battery_low = is_battery_under_in_mv(BATT_LIMIT);
+	if(is_battery_low == true)
+	{
+		ESP_LOGW("BATTERY", "LOW");
+
+		char esp_now_send_buffer[MAX_ESP_NOW_SIZE];
+		sprintf(esp_now_send_buffer, "L");
+		esp_now_send(mac_adress_sender, (uint8_t*) esp_now_send_buffer, strlen(esp_now_send_buffer));
+
+		esp_timer_stop(update_cells_timer_handle);
+		esp_timer_stop(pulsate_cells_timer_handle);
+		all_cells_off();
+		while(is_battery_under_in_mv(BATT_LIMIT))
+		{	
+			vTaskDelay(10000/portTICK_PERIOD_MS);
+		}
+		timers_on = false;
+		sprintf(esp_now_send_buffer, "H");
+		esp_now_send(mac_adress_sender, (uint8_t*) esp_now_send_buffer, strlen(esp_now_send_buffer));
+	}
+}
+
+void config_adc(void)
+{
+    adc1_config_width(ADC_WIDTH_BIT_12);
+    adc1_config_channel_atten(ADC1_CHANNEL_7, ADC_ATTEN_DB_11);
+}
+
+bool is_battery_under_in_mv(uint16_t limit)
+{
+    uint16_t half_battery_voltage;
+    half_battery_voltage = adc1_get_raw(ADC1_CHANNEL_7);
+    half_battery_voltage = (2 * 8 * half_battery_voltage) / 10;  // now battery voltage in mV
+    ESP_LOGI("BATTERY", "%d mV\n", half_battery_voltage);
+    if(half_battery_voltage >= limit)
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
 void wait_for_reception(void)
 {	
-	received_data = false;
 	esp_timer_stop(update_cells_timer_handle);
 	esp_timer_stop(pulsate_cells_timer_handle);
+	timers_on = false;
 	all_cells_off();
 	while(count_since_last_reception >= RECEPTION_THRESHOLD)
 	{
 		ESP_LOGI("wait_for_reception", "no data arrived...");
+		check_battery();
 		no_data_received();
 	}
 }

@@ -1,16 +1,12 @@
 #include "esp_now_functions.h"
+extern uint8_t low_device_battery_counter;
 
 void esp_now_send_wrapper(uint16_t* grouped_results_sensor_right, uint16_t* grouped_results_sensor_left, char* esp_now_send_buffer, uint8_t* mac_adress_left, uint8_t* mac_adress_right)
 {
-
-    //sprintf(esp_now_send_buffer, "\n|%d|%d|%d|\n|%d|%d|%d|", grouped_results_sensor_right[3], grouped_results_sensor_right[4], 
-    //grouped_results_sensor_right[5], grouped_results_sensor_right[0], grouped_results_sensor_right[1], grouped_results_sensor_right[2]);
     sprintf(esp_now_send_buffer, "D%03d%03d%03d%03d%03d%03d", grouped_results_sensor_right[0], grouped_results_sensor_right[1], grouped_results_sensor_right[2],
     grouped_results_sensor_right[3], grouped_results_sensor_right[4], grouped_results_sensor_right[5]);
     esp_now_send(mac_adress_right, (uint8_t*) esp_now_send_buffer, strlen(esp_now_send_buffer));
 
-    //sprintf(esp_now_send_buffer, "\n|%d|%d|%d|\n|%d|%d|%d|", grouped_results_sensor_left[3], grouped_results_sensor_left[4],
-    //grouped_results_sensor_left[5], grouped_results_sensor_left[0], grouped_results_sensor_left[1], grouped_results_sensor_left[2]);
     sprintf(esp_now_send_buffer, "D%03d%03d%03d%03d%03d%03d", grouped_results_sensor_left[0], grouped_results_sensor_left[1], grouped_results_sensor_left[2],
     grouped_results_sensor_left[3], grouped_results_sensor_left[4], grouped_results_sensor_left[5]);
     esp_now_send(mac_adress_left, (uint8_t*) esp_now_send_buffer, strlen(esp_now_send_buffer));
@@ -60,6 +56,15 @@ void on_received_callback(const uint8_t *mac_addr, const uint8_t *data, int data
     mac_adress_to_string(convert_mac_addr, (uint8_t*) mac_addr);
     printf("Received from mac adress: %s\n", convert_mac_addr);
     printf("The message is: %.*s\n\n", data_len, data);
+
+    if(data[0] == 'L')
+    {
+        low_device_battery_counter++;
+    }
+    if(data[0] == 'H')
+    {
+        low_device_battery_counter--;
+    }
 }
 
 void on_sent_callback(const uint8_t *sent_to_mac_addr, esp_now_send_status_t status)

@@ -17,10 +17,12 @@
 void init_gpio(void);
 void i2c_init_master(const uint8_t SDA_LINE, const uint8_t SCL_LINE, const uint32_t FREQ, const uint8_t PORT);
 void config_adc(void);
+bool is_battery_under_in_mv(uint16_t limit);
 
 uint8_t mac_adress_right[MAC_SIZE] = {0x8c, 0x4b, 0x14, 0x0e, 0xf4, 0x9c};
 uint8_t mac_adress_left[MAC_SIZE] = {0x40, 0x91, 0x51, 0x2d, 0x0f, 0xa4};
 uint8_t mac_adress_sender[MAC_SIZE] = {0xfc, 0xf5, 0xc4, 0x09, 0x61, 0x90};
+uint8_t low_device_battery_counter = 0;
 
 void app_main(void)
 {   
@@ -34,7 +36,6 @@ void app_main(void)
 
     i2c_init_master(SDA_GPIO, SCL_GPIO, I2C_FREQ, 0);
     init_gpio();
-    uint16_t half_battery_voltage = 0;
     config_adc();
 
     /* Sensor setup block */
@@ -68,6 +69,8 @@ void app_main(void)
     char esp_now_send_buffer[MAX_ESP_NOW_SIZE];
 
 
+    bool is_battery_low = false;
+    uint8_t check_battery_level_counter = 255;
     for(;;)
     {
         get_single_measurement_blocking(sensor_right, results_right);
@@ -76,10 +79,21 @@ void app_main(void)
         esp_now_send_wrapper(grouped_results_sensor_right, grouped_results_sensor_left, esp_now_send_buffer, mac_adress_left, mac_adress_right);	
         vTaskDelay(portTICK_PERIOD_MS); // This gives the system time to reset the WDT.
 
-        //half_battery_voltage = adc1_get_raw(ADC1_CHANNEL_7);
-        //half_battery_voltage = (2 * 8 * half_battery_voltage) / 10;  
-        //printf("Battery in mV is: %d\n", half_battery_voltage);
+        if(check_battery_level_counter == 255)
+        {   
+            check_battery_level_counter = 0;
 
+            is_battery_low = is_battery_under_in_mv(3850);
+            if(is_battery_low == true || low_device_battery_counter > 0)
+            {
+                gpio_set_level(BATTERY_INDICATOR_LED, ON);
+            }
+            else if(low_device_battery_counter == 0)
+            {
+                gpio_set_level(BATTERY_INDICATOR_LED, OFF);
+            }
+        }
+        check_battery_level_counter++;
         /* debug section */
         //print_sensor_data(results_right, results_left);
         /* ------------- */
@@ -112,7 +126,9 @@ void init_gpio(void)
     gpio_pad_select_gpio(INT_LEFT_PIN);
     gpio_pad_select_gpio(RST_LEFT_PIN);
     gpio_pad_select_gpio(PWR_ENABLE_LEFT_PIN);
+    gpio_pad_select_gpio(BATTERY_INDICATOR_LED);
 
+    ESP_ERROR_CHECK(gpio_set_direction(BATTERY_INDICATOR_LED, GPIO_MODE_OUTPUT));
     ESP_ERROR_CHECK(gpio_set_direction(LP_RIGHT_PIN, GPIO_MODE_OUTPUT));
     ESP_ERROR_CHECK(gpio_set_direction(RST_RIGHT_PIN, GPIO_MODE_OUTPUT));
     ESP_ERROR_CHECK(gpio_set_direction(PWR_ENABLE_RIGHT_PIN, GPIO_MODE_OUTPUT));
@@ -129,4 +145,20 @@ void config_adc(void)
 {
     adc1_config_width(ADC_WIDTH_BIT_12);
     adc1_config_channel_atten(ADC1_CHANNEL_7, ADC_ATTEN_DB_11);
+}
+
+bool is_battery_under_in_mv(uint16_t limit)
+{
+    uint16_t half_battery_voltage;
+    half_battery_voltage = adc1_get_raw(ADC1_CHANNEL_7);
+    half_battery_voltage = (2 * 8 * half_battery_voltage) / 10;  // now battery voltage in mV
+    printf("Battery in mV is: %d\n", half_battery_voltage);
+    if(half_battery_voltage >= limit)
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
 }

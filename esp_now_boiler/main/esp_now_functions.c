@@ -8,7 +8,7 @@
 extern cell cells[CELL_AMOUNT];
 extern esp_timer_handle_t update_cells_timer_handle;
 extern esp_timer_handle_t pulsate_cells_timer_handle;
-extern bool received_data;
+extern bool timers_on;
 extern uint16_t count_since_last_reception;
 
 void esp_now_add_peer_wrapper(uint8_t* mac_adress_sender)
@@ -67,9 +67,9 @@ void on_received_callback(const uint8_t *mac_addr, const uint8_t *data, int data
 	count_since_last_reception = 0;
     char convert_asci_to_integer[4];
 
-    if(data[0] == 'D' && received_data == false)
+    if(data[0] == 'D' && timers_on == false)
 	{
-		received_data = true;
+		timers_on = true;
 		printf("First receive OK!");
 		char convert_asci_to_integer[4];
 
@@ -90,7 +90,7 @@ void on_received_callback(const uint8_t *mac_addr, const uint8_t *data, int data
         esp_timer_start_once(update_cells_timer_handle, 50); // us.
         esp_timer_start_once(pulsate_cells_timer_handle, 100000);
 	}
-	else if(data[0] == 'D' && received_data == true)
+	else if(data[0] == 'D' && timers_on == true)
 	{
 		char convert_asci_to_integer[4];
 
@@ -120,7 +120,7 @@ void on_sent_callback(const uint8_t *sent_to_mac_addr, esp_now_send_status_t sta
     case ESP_NOW_SEND_SUCCESS: ;
         char convert_mac_addr[(MAC_SIZE*2)+1];
         mac_adress_to_string(convert_mac_addr, (uint8_t*) sent_to_mac_addr);
-        printf("Message sent to %s! :)\n\n", convert_mac_addr);
+        printf("Message sent to %s\n\n", convert_mac_addr);
         break;
     case ESP_NOW_SEND_FAIL:
         printf("Transmission failed! :(\n\n");
