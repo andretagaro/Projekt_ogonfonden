@@ -10,8 +10,6 @@ uint8_t mac_adress_sender[MAC_SIZE] = {0xfc, 0xf5, 0xc4, 0x09, 0x61, 0x90};
 
 void init_gpio(void);
 void update_cells(void* args);
-void activate_corresponding_motor(uint8_t i);
-void deactivate_corresponding_motor(uint8_t i);
 void update_which_cells_are_close(void);
 void pulsate_cells(void *args);
 void all_cells_off(void);
@@ -181,7 +179,7 @@ void update_cells(void* args)
 {	
 	for(uint8_t i = 0; i < CELL_AMOUNT; i++)
 	{
-		if(cells[i].cell_state == false)
+		if(cells[i].cell_state == OFF)
 		{
 			if(cells[i].cell_off_counter > 0)
 			{
@@ -193,8 +191,11 @@ void update_cells(void* args)
 
 				if(cells[i].cell_close == false || (cells[i].cell_close && cells[i].cell_close_state))
 				{
-					activate_corresponding_motor(i);
-					cells[i].cell_state = true;
+					if(cells[i].cell_value < MAX_VALUE_CARED_ABOUT)
+					{
+						activate_corresponding_motor(i);
+						cells[i].cell_state = true;
+					}
 				}
 			}
 		}
@@ -234,61 +235,6 @@ void pulsate_cells(void *args)
     esp_timer_start_once(update_cells_timer_handle, 50); // us.
 
 	//Implementera funktion för att undersöka när senaste mottagningen kom.
-}
-
-
-void activate_corresponding_motor(uint8_t i)
-{
-	switch(i)
-	{
-		case 0:
-			gpio_set_level(CELL_0, ON);
-			break;
-		case 1:
-			gpio_set_level(CELL_1, ON);
-			break;
-		case 2:
-			gpio_set_level(CELL_2, ON);
-			break;
-		case 3:
-			gpio_set_level(CELL_3, ON);
-			break;
-		case 4:
-			gpio_set_level(CELL_4, ON);
-			break;
-		case 5:
-			gpio_set_level(CELL_5, ON);
-			break;
-		default:
-			printf("Something is horribly wrong...");
-	}
-}
-
-void deactivate_corresponding_motor(uint8_t i)
-{
-	switch(i)
-	{
-		case 0:
-			gpio_set_level(CELL_0, OFF);
-			break;
-		case 1:
-			gpio_set_level(CELL_1, OFF);
-			break;
-		case 2:
-			gpio_set_level(CELL_2, OFF);
-			break;
-		case 3:
-			gpio_set_level(CELL_3, OFF);
-			break;
-		case 4:
-			gpio_set_level(CELL_4, OFF);
-			break;
-		case 5:
-			gpio_set_level(CELL_5, OFF);
-			break;
-		default:
-			printf("Something is horribly wrong...");
-	}
 }
 
 void update_which_cells_are_close(void)

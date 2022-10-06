@@ -57,7 +57,15 @@ uint16_t delinearize(uint16_t distance_value)
 	}
 	else
 	{
-		return distance_value;
+		distance_value *= 2;
+		if(distance_value > MAX_VALUE_CARED_ABOUT)
+		{
+			return MAX_VALUE_CARED_ABOUT;
+		}
+		else
+		{
+			return distance_value;
+		}
 	}
 
 }
@@ -101,7 +109,7 @@ void on_received_callback(const uint8_t *mac_addr, const uint8_t *data, int data
 			convert_asci_to_integer[1] = data[i + 1];
 			convert_asci_to_integer[2] = data[i + 2];
 			convert_asci_to_integer[3] = '\0';
-		
+
 			cells[j].cell_value = delinearize((uint16_t)(atoi(convert_asci_to_integer)));
 			j++;
 		}
@@ -128,4 +136,59 @@ void on_sent_callback(const uint8_t *sent_to_mac_addr, esp_now_send_status_t sta
     default:
         break;
     }
+}
+
+
+void activate_corresponding_motor(uint8_t i)
+{
+	switch(i)
+	{
+		case 0:
+			gpio_set_level(CELL_0, ON);
+			break;
+		case 1:
+			gpio_set_level(CELL_1, ON);
+			break;
+		case 2:
+			gpio_set_level(CELL_2, ON);
+			break;
+		case 3:
+			gpio_set_level(CELL_3, ON);
+			break;
+		case 4:
+			gpio_set_level(CELL_4, ON);
+			break;
+		case 5:
+			gpio_set_level(CELL_5, ON);
+			break;
+		default:
+			printf("Something is horribly wrong...");
+	}
+}
+
+void deactivate_corresponding_motor(uint8_t i)
+{
+	switch(i)
+	{
+		case 0:
+			gpio_set_level(CELL_0, OFF);
+			break;
+		case 1:
+			gpio_set_level(CELL_1, OFF);
+			break;
+		case 2:
+			gpio_set_level(CELL_2, OFF);
+			break;
+		case 3:
+			gpio_set_level(CELL_3, OFF);
+			break;
+		case 4:
+			gpio_set_level(CELL_4, OFF);
+			break;
+		case 5:
+			gpio_set_level(CELL_5, OFF);
+			break;
+		default:
+			printf("Something is horribly wrong...");
+	}
 }

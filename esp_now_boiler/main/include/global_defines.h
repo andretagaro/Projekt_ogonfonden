@@ -15,6 +15,7 @@
 #define CLOSE_THRESHOLD 40
 #define RECEPTION_THRESHOLD 50
 #define BATT_LIMIT 3200
+#define MIN_PWM 2 //This is not a threshold integer not an percentage.
 
 struct cell
 {
