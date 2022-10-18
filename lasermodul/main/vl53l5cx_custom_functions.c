@@ -1,5 +1,20 @@
 #include "vl53l5cx_custom_functions.h"
 
+/* Sets struct parameters for the sensor.
+** @param sensor_n          pointer to the sensor to set parameters for.
+** @param port  			The i2c port that should be used for the sensor.
+** @param id   			    The internal id of the sensor, this is specified by user.
+*/
+void config_sensor(VL53L5CX_Configuration* sensor_n, const uint8_t port, const uint8_t id)
+{
+    sensor_n->platform.address = VL53L5CX_DEFAULT_I2C_ADDRESS;
+    sensor_n->platform.port = port;
+    sensor_n->platform.id = id;
+}
+
+/* Changes the adress of specified sensor.
+** @param sensor_to_change      ID of the sensor to change address of. 
+*/
 void change_address_sensor(VL53L5CX_Configuration* sensor_to_change)
 {
     uint8_t status = 0;
@@ -7,13 +22,13 @@ void change_address_sensor(VL53L5CX_Configuration* sensor_to_change)
     if(sensor_to_change->platform.id == 1)
     {
         ESP_ERROR_CHECK(gpio_set_level(LP_LEFT_PIN, OFF));
-        status |=  vl53l5cx_set_i2c_address(sensor_to_change, SENSOR_LEFT_ADDRESS);
+        status |=  vl53l5cx_set_i2c_address(sensor_to_change, SENSOR_CUSTOM_ADDRESS);
         ESP_ERROR_CHECK(gpio_set_level(LP_LEFT_PIN, ON));
     }
     else if(sensor_to_change->platform.id == 2)
     {
         ESP_ERROR_CHECK(gpio_set_level(LP_RIGHT_PIN, OFF));
-        status |=  vl53l5cx_set_i2c_address(sensor_to_change, SENSOR_LEFT_ADDRESS);
+        status |=  vl53l5cx_set_i2c_address(sensor_to_change, SENSOR_CUSTOM_ADDRESS);
         ESP_ERROR_CHECK(gpio_set_level(LP_RIGHT_PIN, ON));
     }
     else
@@ -27,11 +42,15 @@ void change_address_sensor(VL53L5CX_Configuration* sensor_to_change)
     }
     else
     {
-        ESP_LOGI("ADDRESS CHANGE", "the address of %d was changed", sensor_to_change->platform.id);
+        ESP_LOGI("ADDRESS CHANGE", "the address of sensor with id(%d) was changed", sensor_to_change->platform.id);
     }
 }
 
-void init_sensor(VL53L5CX_Configuration* sensor_n)
+/* Initializes the sensor in 4x4 mode and to specifed freqency.
+** @param sensor_n         Pointer to the sensor the shall be initialized.
+** @param hz  			   The freqency that the sensor should update sensor data at.
+*/
+void init_sensor_4x4(VL53L5CX_Configuration* sensor_n, uint8_t hz)
 {
     uint8_t status = 0;
 
@@ -41,10 +60,18 @@ void init_sensor(VL53L5CX_Configuration* sensor_n)
     status |= vl53l5cx_init(sensor_n);
     ESP_LOGI("INIT1", "OK");
     //Set resolution to 8x8
-    status |= vl53l5cx_set_resolution(sensor_n, VL53L5CX_RESOLUTION_8X8);
+    status |= vl53l5cx_set_resolution(sensor_n, VL53L5CX_RESOLUTION_4X4);
     ESP_LOGI("INIT2", "OK");
     //Set rangnig speed
-    status |= vl53l5cx_set_ranging_frequency_hz(sensor_n, 15);
+    if((hz >= 1) && (hz <= 60))
+    {
+        status |= vl53l5cx_set_ranging_frequency_hz(sensor_n, hz);
+    }
+    else
+    {
+        ESP_LOGE("init_sensor_8x8", "invalid freqency, input 1-60");
+        return;
+    }
     ESP_LOGI("INIT3", "OK");
     status |= vl53l5cx_set_ranging_mode(sensor_n, VL53L5CX_RANGING_MODE_CONTINUOUS);
     ESP_LOGI("INIT4", "OK");
@@ -61,6 +88,52 @@ void init_sensor(VL53L5CX_Configuration* sensor_n)
     }
 }
 
+/* Initializes the sensor in 8x8 mode and to specifed freqency.
+** @param sensor_n         Pointer to the sensor the shall be initialized.
+** @param hz  			   The freqency that the sensor should update sensor data at.
+*/
+void init_sensor_8x8(VL53L5CX_Configuration* sensor_n, uint8_t hz)
+{
+    uint8_t status = 0;
+
+    //ESP_LOGI("INIT_SENSOR", "GPIO_SET");
+
+    //Init the sensors
+    status |= vl53l5cx_init(sensor_n);
+    ESP_LOGI("INIT1", "OK");
+    //Set resolution to 8x8
+    status |= vl53l5cx_set_resolution(sensor_n, VL53L5CX_RESOLUTION_8X8);
+    ESP_LOGI("INIT2", "OK");
+    //Set rangnig speed
+    if((hz >= 1) && (hz <= 60))
+    {
+        status |= vl53l5cx_set_ranging_frequency_hz(sensor_n, hz);
+    }
+    else
+    {
+        ESP_LOGE("init_sensor_8x8", "invalid freqency, input 1-60");
+        return;
+    }
+    ESP_LOGI("INIT3", "OK");
+    status |= vl53l5cx_set_ranging_mode(sensor_n, VL53L5CX_RANGING_MODE_CONTINUOUS);
+    ESP_LOGI("INIT4", "OK");
+    status |= vl53l5cx_start_ranging(sensor_n);
+    ESP_LOGI("INIT5", "OK");
+
+    if(status != 0)
+    {
+        printf("Error when initializing sensors.. :(\n"); 
+    }
+    else
+    {
+        printf("Sensor VL53L5CX ULD ready ! (Version : %s)\n\n", VL53L5CX_API_REVISION);
+    }
+}
+
+/* Fetches a measurement in blocking mode.
+** @param sensor_n         Pointer to the sensor the data should be fetched from.
+** @param results_n  	   Pointer to the array where data is placed.
+*/
 void get_single_measurement_blocking(VL53L5CX_Configuration *sensor_n, VL53L5CX_ResultsData *results_n)
 {
   bool fail = false;
@@ -81,7 +154,12 @@ void get_single_measurement_blocking(VL53L5CX_Configuration *sensor_n, VL53L5CX_
   }
 }
 
-void print_sensor_data(VL53L5CX_ResultsData* results_right, VL53L5CX_ResultsData* results_left)
+
+/* Prints results data to console in a grid layout.
+** @param results_right         Results from the sensor that is pointing right.
+** @param results_left          Results from the sensor that is pointing left. 
+*/
+void print_sensor_data_8x8(VL53L5CX_ResultsData* results_right, VL53L5CX_ResultsData* results_left)
 {
    for(uint8_t i = 0; i < 64; i = i + 8)
    {
@@ -117,8 +195,63 @@ void print_sensor_data(VL53L5CX_ResultsData* results_right, VL53L5CX_ResultsData
   printf("\n\n\n\n\n\n\n");
 }
 
+/* Groups results from two (4x4)-arrays into a two (6x2) arrays.
+** @param results_right                         Results from the sensor that is pointing right.
+** @param results_left                          Results from the sensor that is pointing left. 
+** @param grouped_results_sensor_right          The (6x2) array of the right sensor.
+** @param grouped_results_sensor_left           The (6x2) array of the left sensor.
+*/
+void group_result_to_12segments_4x4(VL53L5CX_ResultsData* results_right, VL53L5CX_ResultsData* results_left, uint16_t* grouped_results_sensor_right, uint16_t* grouped_results_sensor_left)
+{
+  grouped_results_sensor_right[0] = results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*15] + results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*11];
+  grouped_results_sensor_right[0] = grouped_results_sensor_right[0] / 20;
 
-void group_result_to_segments_12_mode_even(VL53L5CX_ResultsData* results_right, VL53L5CX_ResultsData* results_left, uint16_t* grouped_results_sensor_right, uint16_t* grouped_results_sensor_left)
+  grouped_results_sensor_right[1] = results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*14] + results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*10];
+  grouped_results_sensor_right[1] = grouped_results_sensor_right[0] / 20;
+
+  grouped_results_sensor_right[2] = results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*13] + results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*12] + 
+                                    results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*9] + results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*8];
+  grouped_results_sensor_right[2] = grouped_results_sensor_right[0] / 40;
+
+  grouped_results_sensor_right[3] = results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*3] + results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*7];
+  grouped_results_sensor_right[3] = grouped_results_sensor_right[0] / 20;
+
+  grouped_results_sensor_right[4] = results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*2] + results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*6];
+  grouped_results_sensor_right[4] = grouped_results_sensor_right[0] / 20;
+
+  grouped_results_sensor_right[5] = results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*4] + results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*5] + 
+                                    results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*1] + results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*0];
+  grouped_results_sensor_right[5] = grouped_results_sensor_right[0] / 40;
+
+  //Left side
+  grouped_results_sensor_right[0] = results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*15] + results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*14] + 
+                                    results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*11] + results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*10];
+  grouped_results_sensor_right[0] = grouped_results_sensor_right[0] / 40;
+
+  grouped_results_sensor_right[1] = results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*13] + results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*9];
+  grouped_results_sensor_right[1] = grouped_results_sensor_right[0] / 20;
+
+  grouped_results_sensor_right[2] = results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*8] + results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*12];
+  grouped_results_sensor_right[2] = grouped_results_sensor_right[0] / 20;
+
+  grouped_results_sensor_right[3] = results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*3] + results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*2] + 
+                                    results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*7] + results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*6];
+  grouped_results_sensor_right[3] = grouped_results_sensor_right[0] / 40;
+
+  grouped_results_sensor_right[4] = results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*1] + results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*5];
+  grouped_results_sensor_right[4] = grouped_results_sensor_right[0] / 20;
+
+  grouped_results_sensor_right[5] = results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*0] + results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*4];
+  grouped_results_sensor_right[5] = grouped_results_sensor_right[0] / 20;
+}
+
+/* Groups results from two (16x16)-arrays into a two (6x2) arrays.
+** @param results_right                         Results from the sensor that is pointing right.
+** @param results_left                          Results from the sensor that is pointing left. 
+** @param grouped_results_sensor_right          The (6x2) array of the right sensor.
+** @param grouped_results_sensor_left           The (6x2) array of the left sensor.
+*/
+void group_result_to_12segments_8x8(VL53L5CX_ResultsData* results_right, VL53L5CX_ResultsData* results_left, uint16_t* grouped_results_sensor_right, uint16_t* grouped_results_sensor_left)
 { 
   //Right side
   grouped_results_sensor_right[0] = results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*37] + results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*38] + results_right->distance_mm[VL53L5CX_NB_TARGET_PER_ZONE*39] +

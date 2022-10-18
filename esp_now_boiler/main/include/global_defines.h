@@ -13,9 +13,10 @@
 #define CELL_AMOUNT 6
 #define MAX_VALUE_CARED_ABOUT 200
 #define CLOSE_THRESHOLD 40
-#define RECEPTION_THRESHOLD 50
-#define BATT_LIMIT 3200
+#define RECEPTION_THRESHOLD 500000 // Time in us.
+#define BATT_LIMIT 3200 // Threshold in mV.
 #define MIN_PWM 2 //This is not a threshold integer not an percentage.
+#define RECEPTION_TIMER_UPDATE_TIME 100000
 
 struct cell
 {
@@ -31,6 +32,5 @@ struct cell
 	uint16_t cell_close_value;
 };
 typedef struct cell cell;
-
 
 #endif

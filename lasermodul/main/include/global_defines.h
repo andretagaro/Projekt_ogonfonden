@@ -28,7 +28,7 @@
 #define RST_LEFT_PIN 32
 #define PWR_ENABLE_LEFT_PIN 12
 
-#define SENSOR_LEFT_ADDRESS 0x22
+#define SENSOR_CUSTOM_ADDRESS 0x22
 /* --------------- */
 
 #endif

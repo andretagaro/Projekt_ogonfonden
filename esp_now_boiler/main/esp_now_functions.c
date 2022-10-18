@@ -1,29 +1,33 @@
 #include "esp_now_functions.h"
-#include "global_defines.h"
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdbool.h>
 
 extern cell cells[CELL_AMOUNT];
 extern esp_timer_handle_t update_cells_timer_handle;
 extern esp_timer_handle_t pulsate_cells_timer_handle;
 extern bool timers_on;
-extern uint16_t count_since_last_reception;
+extern uint64_t us_since_last_reception;
 
-void esp_now_add_peer_wrapper(uint8_t* mac_adress_sender)
+/* Add peer to the ESP-NOW network.
+** @param mac_adress				Mac adress of the peer to add.
+*/
+void esp_now_add_peer_wrapper(uint8_t* mac_adress)
 {
     esp_now_peer_info_t peer_to_add;
     memset(&peer_to_add, 0, sizeof(esp_now_peer_info_t));
-    memcpy(peer_to_add.peer_addr, mac_adress_sender, MAC_SIZE);
+    memcpy(peer_to_add.peer_addr, mac_adress, MAC_SIZE);
     ESP_ERROR_CHECK(esp_now_add_peer(&peer_to_add));
 }
 
-void mac_adress_to_string(char* my_mac_as_string, uint8_t* mac_adress_array)
+/* Converts a mac adress in integer array form to a string.
+** @param mac_as_string				Mac adress as a string.
+** @param mac_adress_array			The mac adress in an integer array.
+*/
+void mac_adress_to_string(char* mac_as_string, uint8_t* mac_adress_array)
 {
-    sprintf(my_mac_as_string, "%02x%02x%02x%02x%02x%02x", mac_adress_array[0], mac_adress_array[1], mac_adress_array[2], mac_adress_array[3], mac_adress_array[4], mac_adress_array[5]);
+    sprintf(mac_as_string, "%02x%02x%02x%02x%02x%02x", mac_adress_array[0], mac_adress_array[1], mac_adress_array[2], mac_adress_array[3], mac_adress_array[4], mac_adress_array[5]);
 }
 
+/* Prints the mac adress of the system as a hex string.
+*/
 void print_mac_adress_as_hex_string(void)
 {
     uint8_t my_mac_adress[MAC_SIZE];
@@ -33,6 +37,8 @@ void print_mac_adress_as_hex_string(void)
     printf("My mac address is: %s\n", my_mac_as_string);
 }
 
+/* Activates ESP-NOW and needed peripherals.
+*/
 void activate_esp_now(void)
 {
     ESP_ERROR_CHECK(nvs_flash_init());
@@ -49,6 +55,10 @@ void activate_esp_now(void)
     ESP_ERROR_CHECK(esp_now_register_recv_cb(on_received_callback));
 }
 
+/* Converts the range data with a non linear function.
+** @param distance_value		the value to delinearize.
+** @return						the delinearized value.
+*/
 uint16_t delinearize(uint16_t distance_value)
 {
 	if(distance_value >= MAX_VALUE_CARED_ABOUT)
@@ -70,10 +80,18 @@ uint16_t delinearize(uint16_t distance_value)
 
 }
 
+/*****************************************************************************************************************************************/
+/******************************************CALLBACKS BENETH THIS LINE*********************************************************************/
+/*****************************************************************************************************************************************/
+
+/* Callback when a message is received via ESP-NOW.
+** @param mac_addr		mac adress of the peer who sent the message.
+** @param data			the data that was received.
+** @param data_len		amount of bytes received.
+*/
 void on_received_callback(const uint8_t *mac_addr, const uint8_t *data, int data_len)
 {
-	count_since_last_reception = 0;
-    char convert_asci_to_integer[4];
+	us_since_last_reception = 0;
 
     if(data[0] == 'D' && timers_on == false)
 	{
@@ -121,6 +139,10 @@ void on_received_callback(const uint8_t *mac_addr, const uint8_t *data, int data
     printf("%.*s\n\n", data_len, data);
 }
 
+/* Callback when a message is sent via ESP-NOW.
+** @param sent_to_mac_addr		mac adress of the peer who the message was sent to.
+** @param status				status of the sent message (i.e received or not received).
+*/
 void on_sent_callback(const uint8_t *sent_to_mac_addr, esp_now_send_status_t status)
 {
     switch (status)
@@ -136,59 +158,4 @@ void on_sent_callback(const uint8_t *sent_to_mac_addr, esp_now_send_status_t sta
     default:
         break;
     }
-}
-
-
-void activate_corresponding_motor(uint8_t i)
-{
-	switch(i)
-	{
-		case 0:
-			gpio_set_level(CELL_0, ON);
-			break;
-		case 1:
-			gpio_set_level(CELL_1, ON);
-			break;
-		case 2:
-			gpio_set_level(CELL_2, ON);
-			break;
-		case 3:
-			gpio_set_level(CELL_3, ON);
-			break;
-		case 4:
-			gpio_set_level(CELL_4, ON);
-			break;
-		case 5:
-			gpio_set_level(CELL_5, ON);
-			break;
-		default:
-			printf("Something is horribly wrong...");
-	}
-}
-
-void deactivate_corresponding_motor(uint8_t i)
-{
-	switch(i)
-	{
-		case 0:
-			gpio_set_level(CELL_0, OFF);
-			break;
-		case 1:
-			gpio_set_level(CELL_1, OFF);
-			break;
-		case 2:
-			gpio_set_level(CELL_2, OFF);
-			break;
-		case 3:
-			gpio_set_level(CELL_3, OFF);
-			break;
-		case 4:
-			gpio_set_level(CELL_4, OFF);
-			break;
-		case 5:
-			gpio_set_level(CELL_5, OFF);
-			break;
-		default:
-			printf("Something is horribly wrong...");
-	}
 }
