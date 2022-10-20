@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/queue.h"
 #include "vl53l5cx_api.h"
 #include "platform.h"
 #include "driver/i2c.h"
@@ -17,6 +18,7 @@
 void init_gpio(void);
 void i2c_init_master(const uint8_t SDA_LINE, const uint8_t SCL_LINE, const uint32_t FREQ, const uint8_t PORT);
 void config_adc(void);
+void adjust_height(uint8_t* height_adjustment);
 bool is_battery_under_in_mv(uint16_t limit);
 void battery_handler(void* args);
 
@@ -32,6 +34,7 @@ void app_main(void)
     print_mac_adress_as_hex_string(); // Prints mac adress for hard coding as ESP-NOW peer.
 
     i2c_init_master(SDA_GPIO, SCL_GPIO, I2C_FREQ, 0);
+
     init_gpio();
     config_adc();
 
@@ -67,6 +70,7 @@ void app_main(void)
     uint16_t grouped_results_sensor_left[6] = {0};
 
     esp_timer_start_once(battery_timer_handle, 10000000); // Check battery every 10 seconds.
+    uint8_t height_adjustment = 0;
     for(;;)
     {
         get_single_measurement_blocking(sensor_right, results_right);
@@ -74,6 +78,11 @@ void app_main(void)
         group_result_to_12segments_8x8(results_right, results_left, grouped_results_sensor_right, grouped_results_sensor_left);
         esp_now_send_wrapper(grouped_results_sensor_right, grouped_results_sensor_left, esp_now_send_buffer, mac_adress_left, mac_adress_right);
         vTaskDelay(portTICK_PERIOD_MS); // This gives the system time to reset the WDT.
+
+        if((gpio_get_level(DEC_BUTTON) == 1)||(gpio_get_level(INC_BUTTON) == 1))
+        {
+           adjust_height(&height_adjustment);
+        }
     }
 }
 
@@ -90,7 +99,6 @@ void init_gpio(void)
     gpio_pad_select_gpio(RST_LEFT_PIN);
     gpio_pad_select_gpio(PWR_ENABLE_LEFT_PIN);
     gpio_pad_select_gpio(BATTERY_INDICATOR_LED);
-
     ESP_ERROR_CHECK(gpio_set_direction(BATTERY_INDICATOR_LED, GPIO_MODE_OUTPUT));
     ESP_ERROR_CHECK(gpio_set_direction(LP_RIGHT_PIN, GPIO_MODE_OUTPUT));
     ESP_ERROR_CHECK(gpio_set_direction(RST_RIGHT_PIN, GPIO_MODE_OUTPUT));
@@ -100,6 +108,15 @@ void init_gpio(void)
     ESP_ERROR_CHECK(gpio_set_direction(RST_LEFT_PIN, GPIO_MODE_OUTPUT));
     ESP_ERROR_CHECK(gpio_set_direction(PWR_ENABLE_LEFT_PIN, GPIO_MODE_OUTPUT));
     ESP_ERROR_CHECK(gpio_set_direction(INT_LEFT_PIN, GPIO_MODE_INPUT));
+
+    gpio_pad_select_gpio(INC_BUTTON);
+    gpio_pad_select_gpio(DEC_BUTTON);
+    ESP_ERROR_CHECK(gpio_set_direction(INC_BUTTON, GPIO_MODE_INPUT));
+    ESP_ERROR_CHECK(gpio_set_direction(DEC_BUTTON, GPIO_MODE_INPUT));
+    ESP_ERROR_CHECK(gpio_pulldown_en(INC_BUTTON));
+    ESP_ERROR_CHECK(gpio_pulldown_en(DEC_BUTTON));
+    ESP_ERROR_CHECK(gpio_pullup_dis(INC_BUTTON));
+    ESP_ERROR_CHECK(gpio_pullup_dis(DEC_BUTTON));
 
     ESP_LOGI("INIT_GPIO", "gpios set");
 }
@@ -132,6 +149,38 @@ void config_adc(void)
 {
     adc1_config_width(ADC_WIDTH_BIT_12);
     adc1_config_channel_atten(ADC1_CHANNEL_7, ADC_ATTEN_DB_11);
+}
+
+
+/* Checks what button is pressed, debounces and inc/dec the height adjustment variable.
+** @param height_adjustment         Pointer to the height adjustment variable
+*/
+void adjust_height(uint8_t* height_adjustment)
+{
+    if(gpio_get_level(DEC_BUTTON) == 1)
+    {
+        do{
+            vTaskDelay(30/portTICK_PERIOD_MS);
+        }while(gpio_get_level(DEC_BUTTON) == 1);
+
+        if(*height_adjustment >= 10)
+        {
+            *height_adjustment -= 10;
+        }
+    }
+    else if(gpio_get_level(INC_BUTTON) == 1)
+    {
+        do{
+            vTaskDelay(30/portTICK_PERIOD_MS);
+        }while(gpio_get_level(INC_BUTTON) == 1);
+
+        if(*height_adjustment < 50)
+        {
+            *height_adjustment += 10;
+        }
+    }
+
+    ESP_LOGI("adjust_height", "Height adjustment is set to %d\n", *height_adjustment);
 }
 
 /* Checks if battery voltage is under specified limit.
@@ -174,3 +223,4 @@ void battery_handler(void* args)
     }
     esp_timer_start_once(battery_timer_handle, 10000000); // Check battery every 10 seconds.
 }
+

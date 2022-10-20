@@ -17,6 +17,10 @@
 /* battery pin */
 #define BATTERY_INDICATOR_LED 4
 
+/* Button pins */
+#define INC_BUTTON 34
+#define DEC_BUTTON 39
+
 /*VL53L5CX DEFINES */
 #define LP_RIGHT_PIN 27
 #define INT_RIGHT_PIN 26
