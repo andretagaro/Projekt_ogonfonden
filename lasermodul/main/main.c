@@ -19,6 +19,7 @@ void init_gpio(void);
 void i2c_init_master(const uint8_t SDA_LINE, const uint8_t SCL_LINE, const uint32_t FREQ, const uint8_t PORT);
 void config_adc(void);
 void adjust_height(uint8_t* height_adjustment);
+void adjust_for_height(uint8_t* height_adjustment, uint16_t* grouped_results_sensor_right, uint16_t* grouped_results_sensor_left);
 bool is_battery_under_in_mv(uint16_t limit);
 void battery_handler(void* args);
 
@@ -70,19 +71,21 @@ void app_main(void)
     uint16_t grouped_results_sensor_left[6] = {0};
 
     esp_timer_start_once(battery_timer_handle, 10000000); // Check battery every 10 seconds.
-    uint8_t height_adjustment = 0;
+    //uint8_t height_adjustment = 0;
+    //bool high_res_is_set = true; //Switch between 4x4 and 8x8.
     for(;;)
     {
         get_single_measurement_blocking(sensor_right, results_right);
         get_single_measurement_blocking(sensor_left, results_left);
         group_result_to_12segments_8x8(results_right, results_left, grouped_results_sensor_right, grouped_results_sensor_left);
+        //adjust_for_height(&height_adjustment, grouped_results_sensor_right, grouped_results_sensor_left);
         esp_now_send_wrapper(grouped_results_sensor_right, grouped_results_sensor_left, esp_now_send_buffer, mac_adress_left, mac_adress_right);
         vTaskDelay(portTICK_PERIOD_MS); // This gives the system time to reset the WDT.
 
-        if((gpio_get_level(DEC_BUTTON) == 1)||(gpio_get_level(INC_BUTTON) == 1))
+        /*if((gpio_get_level(DEC_BUTTON)) != (gpio_get_level(INC_BUTTON))) // One but not the other button is pressed.
         {
            adjust_height(&height_adjustment);
-        }
+        }*/
     }
 }
 
@@ -151,6 +154,25 @@ void config_adc(void)
     adc1_config_channel_atten(ADC1_CHANNEL_7, ADC_ATTEN_DB_11);
 }
 
+/* Adjust the sensor results by the height adjustment specified by height_adjustment. 
+** @param height_adjustment                     Pointer to the height adjustment variable
+** @param grouped_results_sensor_right          Pointer to the results array for the right sensor
+** @param grouped_results_sensor_left           Pointer to the results array for the left sensor
+*/
+void adjust_for_height(uint8_t* height_adjustment, uint16_t* grouped_results_sensor_right, uint16_t* grouped_results_sensor_left)
+{
+    for(uint8_t i = 0; i < 6; i++)
+    {
+        if(grouped_results_sensor_right[i] >= *height_adjustment)
+        {
+            grouped_results_sensor_right[i] -= *height_adjustment;
+        }
+        if(grouped_results_sensor_left[i] >= *height_adjustment)
+        {
+            grouped_results_sensor_left[i] -= *height_adjustment;
+        }
+    }
+}
 
 /* Checks what button is pressed, debounces and inc/dec the height adjustment variable.
 ** @param height_adjustment         Pointer to the height adjustment variable

@@ -1,9 +1,6 @@
 #include "esp_now_functions.h"
 extern uint8_t low_device_battery_counter;
 
-
-
-
 void esp_now_send_wrapper(uint16_t* grouped_results_sensor_right, uint16_t* grouped_results_sensor_left, char* esp_now_send_buffer, uint8_t* mac_adress_left, uint8_t* mac_adress_right)
 {
     sprintf(esp_now_send_buffer, "D%03d%03d%03d%03d%03d%03d", grouped_results_sensor_right[0], grouped_results_sensor_right[1], grouped_results_sensor_right[2],
