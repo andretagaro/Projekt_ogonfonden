@@ -136,7 +136,7 @@ void on_received_callback(const uint8_t *mac_addr, const uint8_t *data, int data
 	{
 		printf("Something is wrong with the data transfer, no starting D is found!\n");
 	}
-    printf("%.*s\n\n", data_len, data);
+    //printf("%.*s\n\n", data_len, data);
 }
 
 /* Callback when a message is sent via ESP-NOW.

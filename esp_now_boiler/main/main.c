@@ -69,7 +69,7 @@ void app_main(void)
 	
 	config_adc(); // Config adc for battery reading.
 
-    esp_timer_start_once(battery_timer_handle, 10000000);
+    //esp_timer_start_once(battery_timer_handle, 10000000);
 	esp_timer_start_once(reception_timer_handle, RECEPTION_TIMER_UPDATE_TIME);
     for(;;)
     {

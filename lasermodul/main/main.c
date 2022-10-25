@@ -81,7 +81,6 @@ void app_main(void)
         //adjust_for_height(&height_adjustment, grouped_results_sensor_right, grouped_results_sensor_left);
         esp_now_send_wrapper(grouped_results_sensor_right, grouped_results_sensor_left, esp_now_send_buffer, mac_adress_left, mac_adress_right);
         vTaskDelay(portTICK_PERIOD_MS); // This gives the system time to reset the WDT.
-
         /*if((gpio_get_level(DEC_BUTTON)) != (gpio_get_level(INC_BUTTON))) // One but not the other button is pressed.
         {
            adjust_height(&height_adjustment);

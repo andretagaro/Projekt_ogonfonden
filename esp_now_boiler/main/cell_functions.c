@@ -179,7 +179,7 @@ void update_cells(void* args)
 */
 void pulsate_cells(void *args)
 { 
-    esp_timer_stop(update_cells_timer_handle);
+    //esp_timer_stop(update_cells_timer_handle);
 	for(uint8_t i = 0; i < CELL_AMOUNT; i++)
 	{
 		if(cells[i].cell_close == true)
@@ -193,5 +193,5 @@ void pulsate_cells(void *args)
 		}
 	}
     esp_timer_start_once(pulsate_cells_timer_handle, 100000);
-    esp_timer_start_once(update_cells_timer_handle, 50);
+    //esp_timer_start_once(update_cells_timer_handle, 50);
 }
