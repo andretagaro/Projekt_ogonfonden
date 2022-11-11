@@ -10,20 +10,20 @@ uint8_t mac_adress_left[MAC_SIZE] = {0x40, 0x91, 0x51, 0x2d, 0x0f, 0xa4};
 uint8_t mac_adress_sender[MAC_SIZE] = {0xfc, 0xf5, 0xc4, 0x09, 0x61, 0x90};
 
 void init_gpio(void);
-void config_adc(void);
+//void config_adc(void);
 
-bool is_battery_under_in_mv(uint16_t limit);
+//bool is_battery_under_in_mv(uint16_t limit);
 void wait_for_reception(void);
 void no_data_received(void);
 
 /*Timer handlers*/
-void battery_handler(void* args);
+//void battery_handler(void* args);
 void reception_handler(void* args);
 
 
 esp_timer_handle_t update_cells_timer_handle;
 esp_timer_handle_t pulsate_cells_timer_handle;
-esp_timer_handle_t battery_timer_handle;
+//esp_timer_handle_t battery_timer_handle;
 esp_timer_handle_t reception_timer_handle;
 
 extern cell cells[];
@@ -49,11 +49,11 @@ void app_main(void)
     esp_timer_create(&pulsate_cells_timer, &pulsate_cells_timer_handle);
 
 	/*This timer sets how often the battery voltage should be checked*/
-    const esp_timer_create_args_t battery_timer = {
+    /*const esp_timer_create_args_t battery_timer = {
         .callback = battery_handler,
         .name = "battery handler"
     };
-    esp_timer_create(&battery_timer, &battery_timer_handle);
+    esp_timer_create(&battery_timer, &battery_timer_handle);*/
 	
 	/*This timer sets how often we should check if reception has occured*/
 	const esp_timer_create_args_t reception_timer = {
@@ -67,7 +67,7 @@ void app_main(void)
     activate_esp_now();
     esp_now_add_peer_wrapper(mac_adress_sender);
 	
-	config_adc(); // Config adc for battery reading.
+	//config_adc(); // Config adc for battery reading.
 
     //esp_timer_start_once(battery_timer_handle, 10000000);
 	esp_timer_start_once(reception_timer_handle, RECEPTION_TIMER_UPDATE_TIME);
@@ -112,17 +112,17 @@ void init_gpio()
 
 /*  Configures adc for reading of battery voltage. 
 */
-void config_adc(void)
+/*void config_adc(void)
 {
     adc1_config_width(ADC_WIDTH_BIT_12);
     adc1_config_channel_atten(ADC1_CHANNEL_7, ADC_ATTEN_DB_11);
-}
+}*/
 
 /* Checks if battery voltage is under specified limit.
 ** @param limit				Limit to check if battery voltage is under.
 ** @param return			true if under limit, else false.
 */
-bool is_battery_under_in_mv(uint16_t limit)
+/*bool is_battery_under_in_mv(uint16_t limit)
 {
     uint16_t half_battery_voltage;
     half_battery_voltage = adc1_get_raw(ADC1_CHANNEL_7);
@@ -136,7 +136,7 @@ bool is_battery_under_in_mv(uint16_t limit)
     {
         return true;
     }
-}
+}*/
 
 /* Waits for reception if no reception has occured within the threshold.
 */
@@ -175,7 +175,7 @@ void no_data_received(void)
 /* Reads battery voltage, loops if battery is low and send message to sender
 ** to indicate low battery. 
 */
-void battery_handler(void* args)
+/*void battery_handler(void* args)
 {
 	bool is_battery_low = is_battery_under_in_mv(BATT_LIMIT);
 	if(is_battery_low == true)
@@ -198,7 +198,7 @@ void battery_handler(void* args)
 		esp_now_send(mac_adress_sender, (uint8_t*) esp_now_send_buffer, strlen(esp_now_send_buffer));
 	}
 	esp_timer_start_once(battery_timer_handle, 10000000); // Check battery every 10 seconds.
-}
+}*/
 
 
 /* Keeps track of amount of micro seconds since last reception.
