@@ -34,8 +34,8 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("C:/Users/46768/Documents/projekt_ogonfonden/esp_now_boiler_2/build/bootloader/esp-idf/xtensa/cmake_install.cmake")
-  include("C:/Users/46768/Documents/projekt_ogonfonden/esp_now_boiler_2/build/bootloader/esp-idf/esp32/cmake_install.cmake")
+  include("C:/Users/46768/Documents/projekt_ogonfonden/esp_now_boiler_2/build/bootloader/esp-idf/riscv/cmake_install.cmake")
+  include("C:/Users/46768/Documents/projekt_ogonfonden/esp_now_boiler_2/build/bootloader/esp-idf/esp32c3/cmake_install.cmake")
   include("C:/Users/46768/Documents/projekt_ogonfonden/esp_now_boiler_2/build/bootloader/esp-idf/newlib/cmake_install.cmake")
   include("C:/Users/46768/Documents/projekt_ogonfonden/esp_now_boiler_2/build/bootloader/esp-idf/hal/cmake_install.cmake")
   include("C:/Users/46768/Documents/projekt_ogonfonden/esp_now_boiler_2/build/bootloader/esp-idf/soc/cmake_install.cmake")

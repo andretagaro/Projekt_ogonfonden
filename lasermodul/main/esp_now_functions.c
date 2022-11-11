@@ -1,5 +1,5 @@
 #include "esp_now_functions.h"
-extern uint8_t low_device_battery_counter;
+//extern uint8_t low_device_battery_counter;
 
 /* Add peer to the ESP-NOW network.
 ** @param grouped_results_sensor_right				Results from right sensor.
@@ -84,14 +84,14 @@ void on_received_callback(const uint8_t *mac_addr, const uint8_t *data, int data
     printf("Received from mac adress: %s\n", convert_mac_addr);
     printf("The message is: %.*s\n\n", data_len, data);
 
-    if(data[0] == 'L')
+    /*if(data[0] == 'L')
     {
         low_device_battery_counter++;
     }
     if(data[0] == 'H')
     {
         low_device_battery_counter--;
-    }
+    }*/
 }
 
 /* Callback when a message is sent via ESP-NOW.

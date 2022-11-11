@@ -63,14 +63,14 @@ uint16_t delinearize(uint16_t distance_value)
 {
 	if(distance_value >= MAX_VALUE_CARED_ABOUT)
 	{
-		return MAX_VALUE_CARED_ABOUT;
+		return MAX_VALUE_CARED_ABOUT; // -1 ?
 	}
 	else
 	{
 		distance_value *= 2;
 		if(distance_value > MAX_VALUE_CARED_ABOUT)
 		{
-			return MAX_VALUE_CARED_ABOUT;
+			return MAX_VALUE_CARED_ABOUT; // -1?
 		}
 		else
 		{

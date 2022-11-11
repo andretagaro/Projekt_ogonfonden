@@ -17,36 +17,41 @@
 
 void init_gpio(void);
 void i2c_init_master(const uint8_t SDA_LINE, const uint8_t SCL_LINE, const uint32_t FREQ, const uint8_t PORT);
-void config_adc(void);
-void adjust_height(uint8_t* height_adjustment);
-void adjust_for_height(uint8_t* height_adjustment, uint16_t* grouped_results_sensor_right, uint16_t* grouped_results_sensor_left);
-bool is_battery_under_in_mv(uint16_t limit);
-void battery_handler(void* args);
+void read_from_sensor(void* params);
+void send_to_modules(void* params);
+
+static TaskHandle_t read_from_sensor_handle = NULL;
+static TaskHandle_t send_to_modules_handle = NULL;
 
 uint8_t mac_adress_right[MAC_SIZE] = {0x8c, 0x4b, 0x14, 0x0e, 0xf4, 0x9c};
 uint8_t mac_adress_left[MAC_SIZE] = {0x40, 0x91, 0x51, 0x2d, 0x0f, 0xa4};
 uint8_t mac_adress_sender[MAC_SIZE] = {0xfc, 0xf5, 0xc4, 0x09, 0x61, 0x90};
-uint8_t low_device_battery_counter = 0;
 
-esp_timer_handle_t battery_timer_handle;
+uint16_t grouped_results_sensor_right_buff0[6] = {0};
+uint16_t grouped_results_sensor_right_buff1[6] = {0};
+
+uint16_t grouped_results_sensor_left_buff0[6] = {0};
+uint16_t grouped_results_sensor_left_buff1[6] = {0};
 
 void app_main(void)
 {   
     print_mac_adress_as_hex_string(); // Prints mac adress for hard coding as ESP-NOW peer.
 
     i2c_init_master(SDA_GPIO, SCL_GPIO, I2C_FREQ, 0);
-
     init_gpio();
-    config_adc();
 
-    /* set up timer for battery check */
-    const esp_timer_create_args_t battery_timer = {
-        .callback = battery_handler,
-        .name = "battery handler"
-    };
-    esp_timer_create(&battery_timer, &battery_timer_handle);
+    activate_esp_now();
+    esp_now_add_peer_wrapper(mac_adress_left);
+    esp_now_add_peer_wrapper(mac_adress_right);
 
-    /* Sensor setup block */
+    xTaskCreatePinnedToCore(&send_to_modules, "Send to modules", 2048, NULL, 2, &send_to_modules_handle, 0);
+    xTaskCreatePinnedToCore(&read_from_sensor, "Read from sensors", 2048, NULL, 2, &read_from_sensor_handle, 1);
+}
+
+void read_from_sensor(void* params)
+{
+    uint8_t buff_number = 0;
+
     VL53L5CX_Configuration *sensor_right = malloc(sizeof(VL53L5CX_Configuration));
     config_sensor(sensor_right, 0, 1);
     VL53L5CX_Configuration *sensor_left = malloc(sizeof(VL53L5CX_Configuration));
@@ -61,30 +66,48 @@ void app_main(void)
 
     init_sensor_8x8(sensor_left, 15);
     init_sensor_8x8(sensor_right, 15);
-   
-    activate_esp_now();
-    esp_now_add_peer_wrapper(mac_adress_left);
-    esp_now_add_peer_wrapper(mac_adress_right);
 
+    for(;;)
+    {   
+        get_single_measurement_blocking(sensor_left, results_left);
+        get_single_measurement_blocking(sensor_right, results_right);
+
+        if(buff_number == 0)
+        {
+            group_result_to_12segments_8x8(results_right, results_left, grouped_results_sensor_right_buff0, grouped_results_sensor_left_buff0);
+        }
+        else if(buff_number == 1)
+        {
+            group_result_to_12segments_8x8(results_right, results_left, grouped_results_sensor_right_buff1, grouped_results_sensor_left_buff1);
+        }
+        xTaskNotify(send_to_modules_handle, buff_number, eSetValueWithOverwrite);
+        buff_number = !(buff_number);
+
+        vTaskDelay(30/portTICK_PERIOD_MS);
+        
+    }
+}
+
+void send_to_modules(void* params)
+{
     char esp_now_send_buffer[MAX_ESP_NOW_SIZE];
-    uint16_t grouped_results_sensor_right[6] = {0};
-    uint16_t grouped_results_sensor_left[6] = {0};
+    uint32_t buffer_number;
 
-    esp_timer_start_once(battery_timer_handle, 10000000); // Check battery every 10 seconds.
-    //uint8_t height_adjustment = 0;
-    //bool high_res_is_set = true; //Switch between 4x4 and 8x8.
     for(;;)
     {
-        get_single_measurement_blocking(sensor_right, results_right);
-        get_single_measurement_blocking(sensor_left, results_left);
-        group_result_to_12segments_8x8(results_right, results_left, grouped_results_sensor_right, grouped_results_sensor_left);
-        //adjust_for_height(&height_adjustment, grouped_results_sensor_right, grouped_results_sensor_left);
-        esp_now_send_wrapper(grouped_results_sensor_right, grouped_results_sensor_left, esp_now_send_buffer, mac_adress_left, mac_adress_right);
-        vTaskDelay(portTICK_PERIOD_MS); // This gives the system time to reset the WDT.
-        /*if((gpio_get_level(DEC_BUTTON)) != (gpio_get_level(INC_BUTTON))) // One but not the other button is pressed.
+        xTaskNotifyWait(0,0,&buffer_number,portMAX_DELAY);
+        switch (buffer_number)
         {
-           adjust_height(&height_adjustment);
-        }*/
+            case 0:
+                esp_now_send_wrapper(grouped_results_sensor_right_buff0, grouped_results_sensor_left_buff0, esp_now_send_buffer, mac_adress_left, mac_adress_right);
+                break;
+            case 1:
+                esp_now_send_wrapper(grouped_results_sensor_right_buff1, grouped_results_sensor_left_buff1, esp_now_send_buffer, mac_adress_left, mac_adress_right);
+                break;
+            default:
+                ESP_LOGE("send_to_modules", "NON VALID BUFFER NUMBER");
+                break;
+        }
     }
 }
 
@@ -147,68 +170,13 @@ void i2c_init_master(const uint8_t SDA_LINE, const uint8_t SCL_LINE, const uint3
 
 /*  Configures adc for reading of battery voltage. 
 */
-void config_adc(void)
+/*void config_adc(void)
 {
     adc1_config_width(ADC_WIDTH_BIT_12);
     adc1_config_channel_atten(ADC1_CHANNEL_7, ADC_ATTEN_DB_11);
-}
+}*/
 
-/* Adjust the sensor results by the height adjustment specified by height_adjustment. 
-** @param height_adjustment                     Pointer to the height adjustment variable
-** @param grouped_results_sensor_right          Pointer to the results array for the right sensor
-** @param grouped_results_sensor_left           Pointer to the results array for the left sensor
-*/
-void adjust_for_height(uint8_t* height_adjustment, uint16_t* grouped_results_sensor_right, uint16_t* grouped_results_sensor_left)
-{
-    for(uint8_t i = 0; i < 6; i++)
-    {
-        if(grouped_results_sensor_right[i] >= *height_adjustment)
-        {
-            grouped_results_sensor_right[i] -= *height_adjustment;
-        }
-        if(grouped_results_sensor_left[i] >= *height_adjustment)
-        {
-            grouped_results_sensor_left[i] -= *height_adjustment;
-        }
-    }
-}
-
-/* Checks what button is pressed, debounces and inc/dec the height adjustment variable.
-** @param height_adjustment         Pointer to the height adjustment variable
-*/
-void adjust_height(uint8_t* height_adjustment)
-{
-    if(gpio_get_level(DEC_BUTTON) == 1)
-    {
-        do{
-            vTaskDelay(30/portTICK_PERIOD_MS);
-        }while(gpio_get_level(DEC_BUTTON) == 1);
-
-        if(*height_adjustment >= 10)
-        {
-            *height_adjustment -= 10;
-        }
-    }
-    else if(gpio_get_level(INC_BUTTON) == 1)
-    {
-        do{
-            vTaskDelay(30/portTICK_PERIOD_MS);
-        }while(gpio_get_level(INC_BUTTON) == 1);
-
-        if(*height_adjustment < 50)
-        {
-            *height_adjustment += 10;
-        }
-    }
-
-    ESP_LOGI("adjust_height", "Height adjustment is set to %d\n", *height_adjustment);
-}
-
-/* Checks if battery voltage is under specified limit.
-** @param limit				Limit to check if battery voltage is under.
-** @param return			true if under limit, else false.
-*/
-bool is_battery_under_in_mv(const uint16_t limit)
+/*bool is_battery_under_in_mv(const uint16_t limit)
 {
     uint16_t raw_half_battery_voltage;
     raw_half_battery_voltage = adc1_get_raw(ADC1_CHANNEL_7);
@@ -222,7 +190,7 @@ bool is_battery_under_in_mv(const uint16_t limit)
     {
         return true;
     }
-}
+}*/
 
 /*****************************************************************************************************************************************/
 /******************************************TIMER HANDLERS BENETH THIS LINE****************************************************************/
@@ -231,7 +199,7 @@ bool is_battery_under_in_mv(const uint16_t limit)
 /* Reads battery voltage, loops if battery is low and send message to sender
 ** to indicate low battery. 
 */
-void battery_handler(void* args)
+/*void battery_handler(void* args)
 {
     bool battery_is_under_limit = is_battery_under_in_mv(3850);
     if(battery_is_under_limit == true || low_device_battery_counter > 0)
@@ -243,5 +211,5 @@ void battery_handler(void* args)
         gpio_set_level(BATTERY_INDICATOR_LED, OFF);
     }
     esp_timer_start_once(battery_timer_handle, 10000000); // Check battery every 10 seconds.
-}
+}*/
 

@@ -40,6 +40,10 @@ void activate_esp_now(void)
 
 void on_received_callback(const uint8_t *mac_addr, const uint8_t *data, int data_len)
 {
+    static uint32_t level = 0;
+    gpio_set_level(9, level);
+    level = !level;
+
     char convert_mac_addr[(MAC_SIZE*2)+1];
     mac_adress_to_string(convert_mac_addr, (uint8_t*) mac_addr);
     //printf("Received from mac adress: %s\n", convert_mac_addr);

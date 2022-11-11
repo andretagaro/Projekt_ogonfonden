@@ -11,7 +11,7 @@
 #define OFF 0
 #define ON 1
 #define CELL_AMOUNT 6
-#define MAX_VALUE_CARED_ABOUT 250
+#define MAX_VALUE_CARED_ABOUT 225
 #define CLOSE_THRESHOLD 40
 #define RECEPTION_THRESHOLD 500000 // Time in us.
 #define BATT_LIMIT 3200 // Threshold in mV.
