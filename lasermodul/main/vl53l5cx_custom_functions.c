@@ -39,6 +39,10 @@ void change_address_sensor(VL53L5CX_Configuration* sensor_to_change)
     if(status != 0)
     {
         ESP_LOGE("ADDRESS CHANGE", "could not change address");
+        while(1)
+        {
+            vTaskDelay(1);
+        }
     }
     else
     {
