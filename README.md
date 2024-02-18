@@ -1,13 +1,13 @@
-# Projekt Ögonfonden, haptikbaserad navigering.
+# Projekt Ögonfonden, haptic based navigation.
 
-## Systemöversikt
-Sensormodulen använder sig av lasersensorerna VL53l5CX för att kartlägga omgivningen, efter att datan behandlats skickas den till respektive haptikmodul som baserat på denna data genererar PWM-signaler som driver vibrationsmotorer. Dytun på dessa PWM-signaler ökar med minskade avstånd.
+## System overview
 
-### lasermodul
-Innehåller mjukvara för sensormodulen, bygger på FREERTOS och använder ESP32-wroom-modulen, men justeras för C3-modulen utan större problem.
+The sensor module uses the laser sensors VL53l5CX to map the enviroment, after the module has processed the data it is sent via ESP-NOW to the haptic modules. Based on the data from the sensor module the haptic modules generates a representations matrix on a grid of 2x6 vibration motors.
 
-### esp_now_boiler
-Innehåller kod för haptikmodulen, kör FREERTOS i bakgrunden men använder inte några task-funktioner. Mjukvaran körs i nuläget på ESP32-wroom men kan jsuteras för C3-moudlen utan större problem.
+### Laser module
 
-### esp_now_boiler_2
-Innehåller testkod för ESP-NOW protokollet.
+Contains code for the sensor module, the sensor module is built with the laser sensors VL53l5CX and a Adafruit HUZZAH32 ESP-32 developement card. 
+
+### Haptic module
+
+Contains code for the haptic module, the haptic moudle is built with a custom PCB (see the folder Motor driver card for schematic, assembly and gerber files) and a Adafruit HUZZAH32 ESP-32 developement card.
