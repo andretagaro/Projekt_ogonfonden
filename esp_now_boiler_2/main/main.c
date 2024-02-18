@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "esp_now_functions.h"
+#include "esp_log.h"
 
 uint8_t mac_adress_sender[MAC_SIZE] = {0x7c,0xdf,0xa1,0xb4,0x43,0xcc};
 uint8_t mac_adress_right[MAC_SIZE] = {0x84, 0xf7, 0x03, 0x0b, 0xdd, 0x5c};
@@ -25,6 +26,7 @@ void app_main(void)
 
     for(;;)
     {
-        vTaskDelay(1);
+        vTaskDelay(1000/portTICK_PERIOD_MS);
+        ESP_LOGI("TEST","HELLO\n");
     }
 } 

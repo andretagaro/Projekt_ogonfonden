@@ -35,6 +35,11 @@ uint16_t grouped_results_sensor_left_buff1[6] = {0};
 
 void app_main(void)
 {   
+    /*for(;;)
+    {
+        vTaskDelay(10000/portTICK_PERIOD_MS);
+    }*/
+
     print_mac_adress_as_hex_string(); // Prints mac adress for hard coding as ESP-NOW peer.
 
     i2c_init_master(SDA_GPIO, SCL_GPIO, I2C_FREQ, 0);
@@ -133,6 +138,7 @@ void init_gpio(void)
     ESP_ERROR_CHECK(gpio_set_direction(RST_LEFT_PIN, GPIO_MODE_OUTPUT));
     ESP_ERROR_CHECK(gpio_set_direction(PWR_ENABLE_LEFT_PIN, GPIO_MODE_OUTPUT));
     ESP_ERROR_CHECK(gpio_set_direction(INT_LEFT_PIN, GPIO_MODE_INPUT));
+
 
     gpio_pad_select_gpio(INC_BUTTON);
     gpio_pad_select_gpio(DEC_BUTTON);
